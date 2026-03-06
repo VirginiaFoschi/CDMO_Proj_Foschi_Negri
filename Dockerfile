@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # --- Install MiniZinc System Binary ---
 # Adjust the version number here if you need a specific version
-ENV MINIZINC_VERSION=2.8.0
+ENV MINIZINC_VERSION=2.9.1
 ENV MINIZINC_ARCH=x86_64
 RUN wget https://github.com/MiniZinc/MiniZincIDE/releases/download/${MINIZINC_VERSION}/MiniZincIDE-${MINIZINC_VERSION}-bundle-linux-${MINIZINC_ARCH}.tgz \
     && tar xzf MiniZincIDE-${MINIZINC_VERSION}-bundle-linux-${MINIZINC_ARCH}.tgz \
@@ -35,6 +35,8 @@ RUN wget https://github.com/MiniZinc/MiniZincIDE/releases/download/${MINIZINC_VE
 # Add MiniZinc to PATH so Python can find it
 ENV PATH="/opt/minizinc/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/minizinc/lib:${LD_LIBRARY_PATH}"
+
+RUN minizinc --version && minizinc --solvers
 
 # --- Setup Project ---
 # Set the working directory in the container
@@ -50,4 +52,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
 
 # Define the entry point to your automation script
-ENTRYPOINT ["python", "source/SMT/run.py"]
+CMD ["python", "source/CP/run.py"]

@@ -43,6 +43,6 @@ def circle_method(n_teams: int) -> Tuple[List[List[int]], List[List[int]], float
             base_a.append(week_a)
             base_b.append(week_b)
         
-        computation_time = time.time() - start_time
+        computation_time_ms = (time.time() - start_time) * 1000
         
-        return base_a, base_b, computation_time
+        return base_a, base_b, computation_time_ms

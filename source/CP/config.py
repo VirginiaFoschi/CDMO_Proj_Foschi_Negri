@@ -1,24 +1,20 @@
+from dataclasses import dataclass
 from typing import List
 
+@dataclass
+class ModelConfig:
+    path: str
+    opt: bool
+
+@dataclass
 class ExperimentConfig:
     """Configuration for running experiments."""
     nteams_values: List[int]
     solvers: List[str]
-    timeout_seconds: int
-    models: List[str]
+    timeout_ms: int
+    models: List[ModelConfig]
+    sym_break: List[bool]
 
-    def __init__(
-        self,
-        nteams_values: List[int],
-        solvers: List[str],
-        timeout_ms: int,
-        models: List[str]
-    ):
-        self.nteams_values = nteams_values
-        self.solvers = solvers
-        self.timeout_ms = timeout_ms
-        self.models = models
-    
     def __post_init__(self):
         """Validate configuration."""
         for n in self.nteams_values:
@@ -31,9 +27,19 @@ class ExperimentConfig:
 # Default configuration
 DEFAULT_CONFIG = ExperimentConfig(
     nteams_values=[6, 8, 10, 12, 14, 16, 18],
-    solvers=['chuffed'],
+    solvers=["gecode", "chuffed"],
     timeout_ms=300000,
-    models=['model/model.mzn', 'model/optimized_model.mzn']
+    models=[
+        ModelConfig(
+            path="source/CP/model/model.mzn",
+            opt=False
+        ),
+        ModelConfig(
+            path="source/CP/model/optimized_model.mzn",
+            opt=True
+        )
+    ],
+    sym_break = [False, True]
 )
 
 

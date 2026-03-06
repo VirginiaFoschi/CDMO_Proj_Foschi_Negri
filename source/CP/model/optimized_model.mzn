@@ -3,7 +3,7 @@ include "globals.mzn";
 % ============================================================
 % Parameters
 % ============================================================
-int: nTeams = 16;
+int: nTeams;
 constraint nTeams mod 2 = 0;
 
 int: nWeeks   = nTeams - 1;
@@ -13,20 +13,11 @@ set of int: Teams   = 0..nTeams-1;
 set of int: Weeks   = 1..nWeeks;
 set of int: Periods = 1..nPeriods;
 
-function int: wrap1toM(int: z, int: m) =
-  ((((z - 1) mod m) + m) mod m) + 1;
+array[Weeks, 1..nPeriods] of int: baseA;
+array[Weeks, 1..nPeriods] of int: baseB;
 
-array[Weeks, 1..nPeriods] of int: baseA =
-  array2d(Weeks, 1..nPeriods,
-    [ if k = 1 then 0 else wrap1toM(w - (k-1), nWeeks) endif
-      | w in Weeks, k in 1..nPeriods ]
-  );
-
-array[Weeks, 1..nPeriods] of int: baseB =
-  array2d(Weeks, 1..nPeriods,
-    [ if k = 1 then w else wrap1toM(w + (k-1), nWeeks) endif
-      | w in Weeks, k in 1..nPeriods ]
-  );
+% Symmetry breaking flag
+bool: sym_break;
 
 array[Weeks, 1..nPeriods] of var Periods: matchPeriod;
 
@@ -80,16 +71,25 @@ array[Teams] of var 0..nWeeks: awayCount =
   array1d(Teams, [ nWeeks - homeCount[t] | t in Teams ]);
 constraint forall(t in Teams)( L <= awayCount[t] /\ awayCount[t] <= U );
 
+array[Teams] of var 0..nWeeks: imbalance =
+    array1d(Teams,
+        [ abs(homeCount[t] - awayCount[t]) | t in Teams ]
+    );
+
 % Objective: minimize worst imbalance (0 is best; with bounds it should reach 0)
-var 0..nWeeks: maxImbalance;
-constraint maxImbalance = max([ abs(2*homeCount[t] - nWeeks) | t in Teams ]);
+var 0..nWeeks: maxImbalance = max(imbalance);
+%Since nTeams is even, we know: nWeeks = nTeams - 1 and so each team plays an odd number of matches. This means that perfect balance is impossible, ie the optimal difference between home and away games is always 1
+constraint maxImbalance >= 1;
 
 % ============================================================
 % Symmetry breaking
 % ============================================================
-constraint matchPeriod[1,1] = 1;
+constraint sym_break ->
+  forall(k in 1..nPeriods)(
+      matchPeriod[1,k] = k
+  );
 
-constraint forall(w in 2..nWeeks)(
+constraint sym_break -> forall(w in 2..nWeeks)(
   lex_lesseq(
     [matchPeriod[1,k] | k in 1..nPeriods],
     [matchPeriod[w,k] | k in 1..nPeriods]
@@ -97,34 +97,11 @@ constraint forall(w in 2..nWeeks)(
 );
 
 % Remove global flip symmetry on home/away
-constraint home[1,1] = true;
+constraint sym_break ->
+forall(k in 1..nPeriods)(
+    home[1,k] = true
+);
 % ============================================================
 % Solve
 % ============================================================
 solve minimize maxImbalance;
-
-% ============================================================
-% Output
-% ============================================================
-function string: match_str(int: w, int: k) =
-  if fix(home[w,k]) then
-    show(baseA[w,k]) ++ " vs " ++ show(baseB[w,k])
-  else
-    show(baseB[w,k]) ++ " vs " ++ show(baseA[w,k])
-  endif;
-
-output [
-  "Home bounds: L=" ++ show(L) ++ ", U=" ++ show(U) ++ "\n\n" ++
-  "Home count per team:\n" ++
-  concat([ "Team " ++ show(t) ++ ": " ++ show(homeCount[t]) ++ "\n" | t in Teams ]) ++
-  "\nSchedule:\n" ++
-  concat([
-    "Week " ++ show(w) ++ ": " ++
-    concat([
-      "(" ++ match_str(w,k) ++ ") "
-      | p in Periods, k in 1..nPeriods
-        where fix(matchPeriod[w,k]) = p
-    ]) ++ "\n"
-    | w in Weeks
-  ])
-];

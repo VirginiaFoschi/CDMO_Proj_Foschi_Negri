@@ -15,6 +15,10 @@ set of int: Periods = 1..nPeriods;
 array[Weeks, 1..nPeriods] of int: baseA;
 array[Weeks, 1..nPeriods] of int: baseB;
 
+% Symmetry breaking flag
+bool: sym_break;
+
+
 % Decision Variables
 array[Weeks, 1..nPeriods] of var Periods: matchPeriod;
 
@@ -30,8 +34,8 @@ constraint forall(t in Teams, p in Periods)(
 );
 
 % Symmetry breaking
-constraint matchPeriod[1,1] = 1;
-constraint forall(w in 2..nWeeks)(
+constraint sym_break -> matchPeriod[1,1] = 1;
+constraint sym_break -> forall(w in 2..nWeeks)(
   lex_lesseq(
     [matchPeriod[1,k] | k in 1..nPeriods],
     [matchPeriod[w,k] | k in 1..nPeriods]
