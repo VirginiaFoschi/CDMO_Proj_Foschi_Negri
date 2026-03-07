@@ -1,6 +1,5 @@
 include "globals.mzn";
 
-% --- Parameters ---
 int: nTeams;
 constraint nTeams mod 2 = 0;
 
@@ -15,31 +14,41 @@ set of int: Periods = 1..nPeriods;
 array[Weeks, 1..nPeriods] of int: team1; %team1[w,k] = first team in game slot k of week w
 array[Weeks, 1..nPeriods] of int: team2; %team2[w,k] = second team in game slot k of week w
 
-% Symmetry breaking flag
 bool: sym_break;
 
-%--- Decision Variable ---
-% for each weeke w and each game-slot k, matchPeriod[w,k] is the period to which that game is assigned
+% teamMatch[t,w] = the match index k in which team t participates during week w-> tells in week w, which match involves team t (for example it team 3 plays in the 2nd match of week 5, then teamMatch[3,5]2=2)
+array[Teams, Weeks] of 1..nPeriods: teamMatch =
+    array2d(Teams, Weeks, [
+        sum(k in 1..nPeriods)(
+            k * bool2int(team1[w,k] = t \/ team2[w,k] = t)
+        ) | t in Teams, w in Weeks
+    ]);
+
+% --- Decision Variables ---
+% for each week w and each game-slot k, matchPeriod[w,k] is the period to which that game is assigned
 array[Weeks, 1..nPeriods] of var Periods: matchPeriod;
 
 % --- Constraints ---
 
 % For each week, the period assignments of all game-slots must be all different->  Every period in every week has exactly one game
 constraint forall(w in Weeks)(
-  alldifferent([matchPeriod[w,k] | k in 1..nPeriods])
+    alldifferent([matchPeriod[w,k] | k in 1..nPeriods])
 );
 
-% Counts how many times team t plays in period p across all weeks. This count must not exceed 2
-constraint forall(t in Teams, p in Periods)(
-    sum(w in Weeks, k in 1..nPeriods where team1[w,k] = t)( bool2int(matchPeriod[w,k] = p) )
-  + sum(w in Weeks, k in 1..nPeriods where team2[w,k] = t)( bool2int(matchPeriod[w,k] = p) )
-  <= 2
+% every team plays at most twice in the same period over the tournament
+constraint forall(t in Teams)(
+    global_cardinality_low_up(
+        [matchPeriod[w, teamMatch[t,w]] | w in Weeks],
+        [p | p in Periods],
+        [1 | _ in Periods],
+        [2 | _ in Periods]
+    )
 );
-
 
 % --- Symmetry breaking ---
 
 % Breaks Period symmetry
-constraint sym_break -> forall(k in 1..nPeriods)(matchPeriod[1,k] = k);
+constraint sym_break ->
+    forall(k in 1..nPeriods)(matchPeriod[1,k] = k);
 
 solve satisfy;

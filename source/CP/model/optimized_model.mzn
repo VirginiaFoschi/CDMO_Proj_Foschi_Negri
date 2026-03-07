@@ -18,82 +18,85 @@ array[Weeks, 1..nPeriods] of int: team2;
 % Symmetry breaking flag
 bool: sym_break;
 
+% ================================================================
+% PRECOMPUTATION  (evaluated at compile time — zero runtime cost)
+% ================================================================
 
-% --- Decision Varibales ---
+% teamMatch[t,w] = match index k involving team t in week w
+array[Teams, Weeks] of 1..nPeriods: teamMatch =
+    array2d(Teams, Weeks, [
+        sum(k in 1..nPeriods)(
+            k * bool2int(team1[w,k] = t \/ team2[w,k] = t)
+        ) | t in Teams, w in Weeks
+    ]);
+
+% isTeam1[t,w] = true iff team t is in the team1 slot
+array[Teams, Weeks] of bool: isTeam1 =
+    array2d(Teams, Weeks, [
+        team1[w, teamMatch[t,w]] = t | t in Teams, w in Weeks
+    ]);
+
+% ================================================================
+% DECISION VARIABLES
+% ================================================================
 
 array[Weeks, 1..nPeriods] of var Periods: matchPeriod;
+array[Weeks, 1..nPeriods] of var bool:    home;
 
-% home[w,k] = true  => team1[w,k] home, team2[w,k] away
-% home[w,k] = false => team2[w,k] home, team1[w,k] away
-array[Weeks, 1..nPeriods] of var bool: home;
+% ================================================================
+% PERIOD ASSIGNMENT CONSTRAINTS
+% ================================================================
 
-
-% --- Constraints ---
-
-% Each period in each week has exactly one match
+% C1: each week is a permutation of periods
 constraint forall(w in Weeks)(
-  alldifferent([matchPeriod[w,k] | k in 1..nPeriods])
+    alldifferent([matchPeriod[w,k] | k in 1..nPeriods])
 );
 
-% Each team plays at most twice in the same period over the tournament
-constraint forall(t in Teams, p in Periods)(
-    sum(w in Weeks, k in 1..nPeriods where team1[w,k] = t)(
-      bool2int(matchPeriod[w,k] = p)
+% C2: each team uses every period 1 or 2 times
+constraint forall(t in Teams)(
+    global_cardinality_low_up(
+        [matchPeriod[w, teamMatch[t,w]] | w in Weeks],
+        [p | p in Periods],
+        [1 | _ in Periods],
+        [2 | _ in Periods]
     )
-  + sum(w in Weeks, k in 1..nPeriods where team2[w,k] = t)(
-      bool2int(matchPeriod[w,k] = p)
-    )
-  <= 2
 );
 
-% ============================================================
-% Home/Away balance with tight bounds
-% ============================================================
+% ================================================================
+% HOME / AWAY BALANCE
+% ================================================================
 
-% Each team plays nWeeks matches. Perfect balance is impossible when nWeeks is odd.
-int: L = nWeeks div 2;            % floor((nWeeks)/2)
-int: U = L + (nWeeks mod 2);      % U=L+1 since nWeeks is always odd
+int: L = nWeeks div 2;
+int: U = L + 1;
 
-% For each team t, counts the total home games across the tournament
-array[Teams] of var 0..nWeeks: homeCount =
-  array1d(Teams, [
-    sum(w in Weeks, k in 1..nPeriods)(
-        bool2int( home[w,k] /\ (team1[w,k] = t) )
-      + bool2int( (not home[w,k]) /\ (team2[w,k] = t) )
+array[Teams] of var L..U: homeCount;
+
+constraint forall(t in Teams)(
+    homeCount[t] = sum(w in Weeks)(
+        let { int: m = teamMatch[t,w] } in
+        if isTeam1[t,w] then bool2int(home[w,m])
+        else                  bool2int(not home[w,m])
+        endif
     )
-    | t in Teams
-  ]);
+);
 
-% Tight bounds: homeCount[t] in [L..U]
-constraint forall(t in Teams)( L <= homeCount[t] /\ homeCount[t] <= U );
+% Implied: total home games = total matches
+constraint sum(t in Teams)(homeCount[t]) = nWeeks * nPeriods;
 
-% Optional explicit awayCount (implied)
-array[Teams] of var 0..nWeeks: awayCount =
-  array1d(Teams, [ nWeeks - homeCount[t] | t in Teams ]);
-constraint forall(t in Teams)( L <= awayCount[t] /\ awayCount[t] <= U );
-
-array[Teams] of var 0..nWeeks: imbalance =
-    array1d(Teams,
-        [ abs(homeCount[t] - awayCount[t]) | t in Teams ]
-    );
-
-% Objective: minimize worst imbalance
-var 0..nWeeks: maxImbalance = max(imbalance);
-
-%Since nTeams is even, we know: nWeeks = nTeams - 1 and so each team plays an odd number of matches. This means that perfect balance is impossible, ie the optimal difference between home and away games is always 1
-constraint maxImbalance >= 1;
-
-
-% --- Symmetry breaking ---
-
-% Breaks period symmetry
+% ================================================================
+% SYMMETRY BREAKING
+% ================================================================
+% Period-label symmetry
 constraint sym_break ->
-  forall(k in 1..nPeriods)(
-      matchPeriod[1,k] = k
-  );
+    forall(k in 1..nPeriods)( matchPeriod[1,k] = k );
 
-% Remove global flip symmetry on home/away
+% Global home/away flip symmetry
 constraint sym_break -> home[1,1] = true;
 
+% ================================================================
+% SOLVE
+% ================================================================
+
+var int: maxImbalance = max(t in Teams)(abs(2*homeCount[t] - nWeeks));
 
 solve minimize maxImbalance;

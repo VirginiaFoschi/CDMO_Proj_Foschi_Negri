@@ -49,7 +49,7 @@ def run_experiments(
                     
                     print(f"  Total time: {result['time']}s")
                     print(f"  Optimal: {result['optimal']}")
-                    print(f"  Solution found: {result['sol'] is not None}")
+                    print(f"  Solution found: {bool(result['sol'])}")
             
         output_file = output_dir / f"{n_teams}.json"
         save_results(current_results, output_file)
@@ -96,7 +96,7 @@ def main():
     parser.add_argument(
         '--output-dir',
         type=str,
-        default='res/CP2',
+        default='res/CP',
         help='Output directory for results (default: res/CP)'
     )
     

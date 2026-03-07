@@ -28,7 +28,7 @@ def find_solution(n_teams, model, solver, symmetry_breaking, time_limit_ms = 300
 
     obj = result.objective
     optimal = result.status.has_solution()
-    solution = parse_solution(result, base_a, base_b) if optimal else None
+    solution = parse_solution(result, base_a, base_b) if optimal else []
 
     return obj, optimal, solution
 
@@ -55,7 +55,7 @@ def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, time_limit_ms=
     obj, optimal, solution = find_solution(nTeams, model, solver, symmetry_breaking, time_limit_ms)
     end_time = time.time()
     total_time = end_time - start_time
-    time_limit_s = time_limit_ms / 1000
+    time_limit_s = time_limit_ms // 1000
     
     result_dict["time"] = min(math.floor(total_time), time_limit_s)
     result_dict["optimal"] = optimal

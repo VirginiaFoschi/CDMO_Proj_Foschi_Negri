@@ -48,10 +48,10 @@ def parse_solution(
         print(f"Warning: Could not parse solution: {e}")
         return None
 
-def format_sol(sol):
-    if sol is None:
-        return 'null'
-    
+def format_sol(sol):  
+    if sol == []:
+        return "[]"
+
     rows = []
     for row in sol:
         matches = ",".join(f"[{a},{b}]" for a, b in row)
