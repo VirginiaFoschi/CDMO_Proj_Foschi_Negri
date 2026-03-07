@@ -26,16 +26,16 @@ class ExperimentConfig:
 
 # Default configuration
 DEFAULT_CONFIG = ExperimentConfig(
-    nteams_values=[6, 8, 10, 12, 14, 16, 18],
+    nteams_values=[6,8,10,12,14,16,18,20, 22],
     solvers=["gecode", "chuffed"],
     timeout_ms=300000,
     models=[
         ModelConfig(
-            path="source/CP/model/model.mzn",
+            path="source/CP/model/model2.mzn",
             opt=False
         ),
         ModelConfig(
-            path="source/CP/model/optimized_model.mzn",
+            path="source/CP/model/optimized_model2.mzn",
             opt=True
         )
     ],

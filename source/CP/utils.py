@@ -37,8 +37,8 @@ def parse_solution(
         for w in range(n_weeks):
             for k in range(n_periods):
                 period = match_period[w][k] - 1  # convert to 0-index
-                team_a = int(base_a[w][k])
-                team_b = int(base_b[w][k])
+                team_a = int(base_a[w][k]) + 1
+                team_b = int(base_b[w][k]) + 1 # convert to 1-index
 
                 schedule[period][w] = [team_a, team_b]
 

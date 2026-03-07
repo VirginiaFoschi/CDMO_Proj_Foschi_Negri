@@ -14,8 +14,8 @@ def find_solution(n_teams, model, solver, symmetry_breaking, time_limit_ms = 300
     base_a, base_b, precomputation_time = circle_method(n_teams)
 
     instance["nTeams"] = n_teams
-    instance["baseA"] = base_a
-    instance["baseB"] = base_b
+    instance["team1"] = base_a
+    instance["team2"] = base_b
     instance["sym_break"] = symmetry_breaking
 
     print(f"Solving for n = {n_teams}...")
@@ -55,8 +55,9 @@ def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, time_limit_ms=
     obj, optimal, solution = find_solution(nTeams, model, solver, symmetry_breaking, time_limit_ms)
     end_time = time.time()
     total_time = end_time - start_time
+    time_limit_s = time_limit_ms / 1000
     
-    result_dict["time"] = math.floor(total_time)
+    result_dict["time"] = min(math.floor(total_time), time_limit_s)
     result_dict["optimal"] = optimal
     result_dict["obj"] = obj
     result_dict["sol"] = solution

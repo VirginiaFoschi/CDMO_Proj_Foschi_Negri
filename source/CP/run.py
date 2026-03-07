@@ -96,7 +96,7 @@ def main():
     parser.add_argument(
         '--output-dir',
         type=str,
-        default='res/CP',
+        default='res/CP2',
         help='Output directory for results (default: res/CP)'
     )
     
