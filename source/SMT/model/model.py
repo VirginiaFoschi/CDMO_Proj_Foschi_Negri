@@ -1,78 +1,80 @@
-import time
-from typing import Dict, List, Optional
-from circle_method import circle_method
+from typing import Dict
 import z3
+from z3 import *
 
-def lex_lesseq(a, b):
-    n = len(a)
-    clauses = []
-    equal_prefix = z3.BoolVal(True)
-
-    for i in range(n):
-        clauses.append(z3.And(equal_prefix, a[i] < b[i]))
-        equal_prefix = z3.And(equal_prefix, a[i] == b[i])
-
-    clauses.append(equal_prefix)  # allow equality
-    return z3.Or(*clauses)
-
-# ================================================================
-#  Model builder
-# ================================================================
-
-def build_model(n_teams: int, A, B, symmetry_breaking=True):
+def solve_smt(
+    n_teams: int = None,
+    timeout_ms: int = 300000,
+    symm_break: bool = True, 
+    base_a: list = None,
+    base_b: list = None,    
+    team_match_idx: list = None
+) -> Dict:
     """
-    Build Z3 model with boolean encoding.
+    Solve tournament scheduling with Z3.
     """
-    nW = n_teams - 1
-    nP = n_teams // 2
+    n_weeks = n_teams - 1
+    n_periods = n_teams // 2
+    
+    s = Then('card2bv','smt').solver()
+    s.set(timeout=300*1000)
 
-    solver = z3.Solver()
-    solver.set("sat.phase", "caching")
-
-    # ── Boolean decision variables ──────────────────────────
-    x = [
-        [
-            [z3.Bool(f"x_{w+1}_{k+1}_{p+1}") for p in range(nP)]
-            for k in range(nP)
-        ]
-        for w in range(nW)
+    # ---------------------------------------------------------
+    # 2. Decision Variables (Integers)
+    # ---------------------------------------------------------
+    # match_period[w][k] is an INTEGER between 1 and n_periods
+    match_period = [
+        [Int(f"p_w{w}_k{k}") for k in range(n_periods)] 
+        for w in range(n_weeks)
     ]
 
-    # ── Exactly-one period per match ────────────────────────
-    for w in range(nW):
-        for k in range(nP):
-            solver.add(z3.PbEq([(x[w][k][p], 1) for p in range(nP)], 1))
+    # Domain Constraints (1..nPeriods)
+    for w in range(n_weeks):
+        for k in range(n_periods):
+            s.add(match_period[w][k] >= 1)
+            s.add(match_period[w][k] <= n_periods)
 
-    # ── Exactly-one match per period per week ───────────────
-    for w in range(nW):
-        for p in range(nP):
-            solver.add(z3.PbEq([(x[w][k][p], 1) for k in range(nP)], 1))
+    # ---------------------------------------------------------
+    # 3. Constraints (Using PB logic on Integer Expressions)
+    # ---------------------------------------------------------
 
-    # ── Precompute team slots ───────────────────────────────
-    team_slots = {t: [] for t in range(n_teams)}
-    for w in range(nW):
-        for k in range(nP):
-            team_slots[A[w][k]].append((w, k))
-            team_slots[B[w][k]].append((w, k))
+    # A. AllDifferent per Week
+    # For every period 'p', exactly one match 'k' in this week uses it.
+    for w in range(n_weeks):
+        for p in range(1, n_periods + 1):
+            # The expression (match_period[w][k] == p) becomes a Boolean for the solver
+            s.add(PbEq([(match_period[w][k] == p, 1) for k in range(n_periods)], 1))
 
-    # ── C2: at most 2 per team per period ───────────────────
+    # B. Team Period Balancing (Global Cardinality)
+    # "Every team plays at most twice in the same period"
     for t in range(n_teams):
-        slots = team_slots[t]
-        if len(slots) <= 2:
-            continue
-        for p in range(nP):
-            bools = [x[w][k][p] for w, k in slots]
-            solver.add(z3.AtMost(*bools, 2))
+        for p in range(1, n_periods + 1):
+            # How many weeks does team t play in period p?
+            occurrences = [(match_period[w][team_match_idx[t][w]] == p, 1)
+                        for w in range(n_weeks)]
+            s.add(PbGe(occurrences, 1))  # at least once
+            s.add(PbLe(occurrences, 2))  # at most twice
 
-            # IMPLIED: at least 1 per period (pigeonhole)
-            # nWeeks matches into nPeriods slots with max 2 each
-            # capacity = 2*nP = nTeams, need = nWeeks = nTeams-1
-            # → every period must have at least 1
-            solver.add(z3.AtLeast(*bools, 1))
+    # C. Symmetry Breaking
+    if symm_break:
+        # First week is 1, 2, 3...
+        for k in range(n_periods):
+            s.add(match_period[0][k] == k + 1)
 
-    # ── Symmetry breaking ───────────────────────────────────
-    if symmetry_breaking:
-        for k in range(nP):
-            solver.add(x[0][k][k])
+    # ---------------------------------------------------------
+    # 4. Solve
+    # ---------------------------------------------------------
+    result = s.check()
+    print(f"Z3 result: {result}")
+    if result == sat:
+        m = s.model()
 
-    return solver, x
+        match_period_solution = [
+            [m.evaluate(match_period[w][k]).as_long() for k in range(n_periods)]
+            for w in range(n_weeks)
+        ]
+        print(match_period_solution)
+
+        return True, match_period_solution
+    else:
+        return False, []
