@@ -11,7 +11,7 @@ class ExperimentConfig:
     """Configuration for running experiments."""
     nteams_values: List[int]
     solvers: List[str]
-    timeout_ms: int
+    timeout_s: int
     models: List[ModelConfig]
     sym_break: List[bool]
 
@@ -28,7 +28,7 @@ class ExperimentConfig:
 DEFAULT_CONFIG = ExperimentConfig(
     nteams_values=[6,8,10,12,14,16,18,20,22],
     solvers=["gecode", "chuffed"],
-    timeout_ms=300000,
+    timeout_s=300,
     models=[
         ModelConfig(
             path="source/CP/model/model.mzn",

@@ -97,6 +97,12 @@ constraint sym_break -> home[1,1] = true;
 % SOLVE
 % ================================================================
 
+% homeGames + awayGames = nWeeks-> AwayGames = nWeeks - homeGames
+% |homeGames - awayGames|
+% = |homeGames - (nWeeks - homeGames)|
+% = |homeGames - nWeeks + homeGames|
+% = |2 * homeGames - nWeeks|
+
 var int: maxImbalance = max(t in Teams)(abs(2*homeCount[t] - nWeeks));
 
 solve minimize maxImbalance;

@@ -4,13 +4,16 @@ import z3
 import json
 
 def parse_solution(
-    result: z3.ModelRef,
+    result,
     base_a: List[List[int]],
     base_b: List[List[int]]
 ) -> Optional[List[List[List[int]]]]:
     """
     Parse SMT solution into period x week matrix format.
     """
+    if result == []:
+        return None
+    
     try:
         match_period = result
 

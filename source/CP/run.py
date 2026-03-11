@@ -13,7 +13,7 @@ def run_experiments(
     nteams_values: List[int],
     solvers: List[str],
     models: List[ModelConfig],
-    timeout: int,
+    timeout_s: int,
     sym_break: List[bool],
     output_dir: Path
 ):
@@ -42,7 +42,7 @@ def run_experiments(
                         model=model,
                         solver_name=solver_name,
                         symmetry_breaking=sym,
-                        time_limit_ms=timeout
+                        time_limit_s=timeout_s
                     )
 
                     current_results[key] = result
@@ -83,8 +83,8 @@ def main():
     parser.add_argument(
         '--timeout',
         type=int,
-        default=DEFAULT_CONFIG.timeout_ms,
-        help='Timeout in milliseconds (default: 300000)'
+        default=DEFAULT_CONFIG.timeout_s,
+        help='Timeout in seconds (default: 300)'
     )
     parser.add_argument(
         '--sym_break',
@@ -106,7 +106,7 @@ def main():
         nteams_values=args.nteams,
         solvers=args.solvers,
         models=args.models,
-        timeout=args.timeout,
+        timeout_s=args.timeout,
         sym_break=args.sym_break,
         output_dir=Path(args.output_dir)
     )

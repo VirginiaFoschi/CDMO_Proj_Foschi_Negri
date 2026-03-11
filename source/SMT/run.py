@@ -9,13 +9,14 @@ from pathlib import Path
 from typing import List
 from circle_method import circle_method
 from model.model import solve_smt
+from model.optimized_model import solve_smt_optimize
 from utils import parse_solution
 from config import DEFAULT_CONFIG, ExperimentConfig, ModelConfig
 from utils import save_results
 import z3
 from z3 import *
 
-def solve_sts(nTeams, model, symmetry_breaking=True, time_limit_ms=300000):
+def solve_sts(nTeams, model, symmetry_breaking=True, time_limit_s=300, opt=False):
     """
     Solve STS problem with precomputed home/away assignments.
     """
@@ -33,21 +34,21 @@ def solve_sts(nTeams, model, symmetry_breaking=True, time_limit_ms=300000):
     # Solve
     start_time = time.time()
     base_a, base_b, team_match_idx = circle_method(nTeams)
-    opt, solution = solve_smt(nTeams, time_limit_ms, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx)
+    opt, solution, obj_value = solve_smt_optimize(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx) if opt else solve_smt(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx)
     end_time = time.time()
     total_time = end_time - start_time
-    time_limit_s = time_limit_ms // 1000
     
     result_dict["time"] = min(math.floor(total_time), time_limit_s)
+    result_dict["obj"] = obj_value
     result_dict["optimal"] = opt
-    result_dict["sol"] = parse_solution(solution, base_a, base_b)
+    result_dict["sol"] = parse_solution(solution, base_a, base_b) if opt else []
         
     return result_dict
 
 def run_experiments(
     nteams_values: List[int],
     models: List[ModelConfig],
-    timeout: int,
+    timeout_s: int,
     sym_break: List[bool],
     output_dir: Path
 ):
@@ -74,7 +75,8 @@ def run_experiments(
                     nTeams=n_teams,
                     model=model,
                     symmetry_breaking=sym,
-                    time_limit_ms=timeout
+                    time_limit_s=timeout_s,
+                    opt=model.opt
                 )
 
                 current_results[key] = result
@@ -130,7 +132,7 @@ def main():
     run_experiments(
         nteams_values=args.nteams,
         models=args.models,
-        timeout=args.timeout,
+        timeout_s=args.timeout,
         sym_break=args.sym_break,
         output_dir=Path(args.output_dir)
     )

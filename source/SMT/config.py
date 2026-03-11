@@ -32,10 +32,10 @@ DEFAULT_CONFIG = ExperimentConfig(
             path="source/SMT/model/model.mzn",
             opt=False
         ),
-        # ModelConfig(
-        #     path="source/SMT/model/optimized_model.mzn",
-        #     opt=True
-        # )
+        ModelConfig(
+            path="source/SMT/model/optimized_model.mzn",
+            opt=True
+        )
     ],
     sym_break = [False, True]
 )
