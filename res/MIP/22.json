@@ -1,0 +1,74 @@
+{
+  "mip_cbc": {
+    "time": 300,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_cbc_symbreak": {
+    "time": 300,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_highs": {
+    "time": 300,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_highs_symbreak": {
+    "time": 300,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_scip": {
+    "time": 299,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_scip_symbreak": {
+    "time": 300,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_cbc_optimized": {
+    "time": 300,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_cbc_optimized_symbreak": {
+    "time": 300,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_highs_optimized": {
+    "time": 300,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_highs_optimized_symbreak": {
+    "time": 300,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_scip_optimized": {
+    "time": 299,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  },
+  "mip_scip_optimized_symbreak": {
+    "time": 299,
+    "optimal": false,
+    "obj": null,
+    "sol": []
+  }
+}
