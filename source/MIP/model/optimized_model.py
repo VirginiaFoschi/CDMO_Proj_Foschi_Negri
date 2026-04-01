@@ -82,9 +82,6 @@ def solve_mip_optimize(
 
     # --- Home/Away balance ---
 
-    L = n_weeks // 2
-    U = L + 1
-
     # H[t] = number of home games of team t
     H = {}
 
@@ -104,13 +101,13 @@ def solve_mip_optimize(
 
         H[t] = pulp.lpSum(home_terms)
 
-        prob += (H[t] >= L)
-        prob += (H[t] <= U)
-
     # z = maximum imbalance
+    # Lower bound = 1: since n_weeks = n-1 is always odd (n always even),
+    # a perfectly balanced split is impossible, so max_imbalance >= 1.
+    # Upper bound = n_weeks: worst case all games home or all away.
     z = pulp.LpVariable(
         "max_imbalance",
-        lowBound=0,
+        lowBound=1,
         upBound=n_weeks,
         cat=pulp.LpInteger,
     )
