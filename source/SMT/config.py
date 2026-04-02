@@ -25,7 +25,7 @@ class ExperimentConfig:
 
 # Default configuration
 DEFAULT_CONFIG = ExperimentConfig(
-    nteams_values=[6,8,10,12,14,16,18,20],
+    nteams_values=[6,8,10,12,14,16,18,20, 22],
     timeout_s=300,
     models=[
         ModelConfig(
