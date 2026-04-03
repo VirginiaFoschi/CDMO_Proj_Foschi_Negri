@@ -142,7 +142,7 @@ def main():
     )
     parser.add_argument(
         "--sym_break",
-        type=bool,
+        type=lambda x: x.lower() in ("true", "1", "yes", "t"),
         nargs="+",
         default=DEFAULT_CONFIG.sym_break,
         help="Whether to use symmetry breaking",

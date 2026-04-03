@@ -11,6 +11,7 @@ class ExperimentConfig:
     """Configuration for running experiments."""
     nteams_values: List[int]
     timeout_s: int
+    solvers: List[str]
     models: List[str]
     sym_break: List[bool]
 
@@ -39,6 +40,7 @@ MODELS = {
 DEFAULT_CONFIG = ExperimentConfig(
     nteams_values=[6,8,10,12,14,16,18,20,22],
     timeout_s=300,
+    solvers=["z3"],
     models=["decision", "optimized"],
     sym_break = [False, True]
 )
