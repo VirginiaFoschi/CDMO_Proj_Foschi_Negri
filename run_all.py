@@ -3,21 +3,21 @@ import subprocess
 import sys
 from pathlib import Path
 
-PARADIGM_SCRIPTS = {
+MODEL_FILES = {
     "CP":  Path("source/CP/run.py"),
     "SAT": Path("source/SAT/run.py"),
     "SMT": Path("source/SMT/run.py"),
     "MIP": Path("source/MIP/run.py"),
 }
 
-VALID_SOLVERS = {
+SOLVERS = {
     "CP":  ["gecode",  "chuffed"],
     "SAT": ["solver_sat_1", "solver_sat_2"], 
     "SMT": ["z3"], 
     "MIP": ["cbc", "highs", "scip"], 
 }
 
-ALL_PARADIGMS  = list(PARADIGM_SCRIPTS.keys())
+ALL_PARADIGMS  = list(MODEL_FILES.keys())
 ALL_NTEAMS     = [6, 8, 10, 12, 14, 16, 18, 20, 22]
 DEFAULT_OUTDIR = "res"
 
@@ -25,7 +25,7 @@ DEFAULT_OUTDIR = "res"
 _NOT_SET = object()
 
 def filter_solvers(requested: list[str], paradigm: str) -> list[str]:
-    valid = VALID_SOLVERS[paradigm]
+    valid = SOLVERS[paradigm]
     if len(requested) == 1 and requested[0].lower() == "all":
         return valid  # return all valid solvers for this paradigm
     kept    = [s for s in requested if s in valid]
@@ -43,7 +43,7 @@ def build_argv(args, paradigm: str) -> list[str]:
     everything else is left to each run.py's own DEFAULT_CONFIG.
     """
     out_dir = Path(args.output_dir) / paradigm
-    argv = [sys.executable, str(PARADIGM_SCRIPTS[paradigm]),
+    argv = [sys.executable, str(MODEL_FILES[paradigm]),
             "--output-dir", str(out_dir)]
 
     if args.nteams is not _NOT_SET:
@@ -66,7 +66,7 @@ def build_argv(args, paradigm: str) -> list[str]:
     return argv
 
 def run_paradigm(paradigm: str, argv: list[str], dry_run: bool) -> int:
-    script = PARADIGM_SCRIPTS[paradigm]
+    script = MODEL_FILES[paradigm]
     if not script.exists():
         print(f"[WARN]  {paradigm}: script not found at '{script}' — skipping.")
         return -1
@@ -127,7 +127,7 @@ def parse_args():
 def resolve_paradigms(raw: list[str]) -> list[str]:
     if len(raw) == 1 and raw[0].lower() == "all":
         return ALL_PARADIGMS
-    unknown = [p for p in raw if p not in PARADIGM_SCRIPTS]
+    unknown = [p for p in raw if p not in MODEL_FILES]
     if unknown:
         print(f"[ERROR] Unknown paradigm(s): {unknown}. Valid: {ALL_PARADIGMS}")
         sys.exit(1)
