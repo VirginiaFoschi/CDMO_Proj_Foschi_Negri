@@ -1,0 +1,71 @@
+# CDMO Project 2024/2025 - Sports Tournament Scheduling (STS)
+This repository contains the implementation, experimental results, and report developed for the Combinatorial Decision Making and Optimization course project, academic year 2024/2025.
+### Authors: Foschi Virginia, Negri Marta
+
+## Problem Description
+Given a tournament of n teams (n even, n ≥ 4), schedule all games over n-1 weeks, each divided into n/2 periods of two slots (home and away), such that:
+- Every team plays against every other team exactly once
+- Every team plays exactly once per week
+- Every team plays at most twice in the same period over the tournament
+
+An optimization variant is also implemented, minimizing the imbalance between home and away games for each team.
+
+## Project Structure
+.
+├── source/
+│   ├── CP/       # Constraint Programming
+│   ├── SAT/      # propositional SATisfiability
+│   ├── SMT/      # Satisfiability Modulo Theory
+│   └── MIP/      # Mixed Integer Programming
+├── res/
+│   ├── CP/       # results as <n_teams>.json
+│   ├── SAT/
+│   ├── SMT/
+│   └── MIP/
+├── run_all.py        #file to run all experiments
+├── Dockerfile
+└── requirements.txt
+└── solution_checker.py
+
+## Running Experiments
+All experiments run inside Docker to guarantee full reproducibility.
+1. Install Docker:
+Download and install Docker Desktop from https://www.docker.com/get-started.
+No other dependencies are required — all solvers and packages are installed inside the container.
+2. Build the Image:
+From the project root, build the image: 
+docker build -t project-solver .
+3. Run Experiments:
+- Option A - run directly: 
+docker run --rm -v ${PWD}:/app -w /app sts-solver python run_all.py [OPTIONS]
+- Opition B- enter the container first and then run
+# 1. Open a bash shell inside the container
+docker run -it --rm \
+  -v ${PWD}:/app \
+  -w /app \
+  --entrypoint bash \
+  sts-solver
+
+# 2. Then run the experiments from inside
+python run_all.py [OPTIONS]
+
+Results are written to res/<PARADIGM>/<n_teams>.json on your local machine.
+
+| Flag | Description |
+|------|-------------|
+| `-p`, `--paradigms` | Paradigms to run: `CP`, `SAT`, `SMT`, `MIP`, or `all` (default: `all`) |
+| `-n`, `--nteams` | Team sizes (MUST BE EVEN!!!), e.g. 6 8 10. If omitted, each paradigm uses its own defaults |
+| `-s`, `--solvers` | Solvers to use, or all for every valid solver per paradigm. Invalid solvers are skipped with a warning |
+| `-m`, `--models` | Models to use: decision, optimized, or both. If omitted, uses paradigm defaults |
+| `-t`, `--timeout` | Timeout per run in seconds. If omitted, uses paradigm defaults |
+| `-sym`, `--sym_break` | Symmetry breaking: True, False, or both. If omitted, uses paradigm defaults |
+| `-o`, `--output_dir` | Base output directory (default: res/) |
+
+## Examples
+- Run everything with each paradigm's own defaults: python run_all.py --p all
+- Run only CP and MIP on small instances: python run_all.py --p CP MIP --n 6 8 10
+- Run all paradigms with all their valid solvers, both with and without symmetry breaking: python run_all.py --p all --s all --sym both
+- Run only the optimization model with a custom timeout: python run_all.py --m optimized --t 120
+
+4) Run a Single Paradigm
+Each paradigm can also be run individually: python source/CP/run.py --n 6 8 --t 120
