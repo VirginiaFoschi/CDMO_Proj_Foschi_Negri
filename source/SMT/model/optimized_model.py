@@ -119,7 +119,8 @@ def solve_smt_optimize(
             for w in range(n_weeks)
         ]
 
-        #return optimal, solution, objective value
-        return True, match_period_solution, obj_val
+        #return optimal,solution, objective value
+        is_optimal = obj_val == 1
+        return is_optimal, match_period_solution, obj_val
     else:
         return False, [], None

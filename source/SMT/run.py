@@ -11,12 +11,12 @@ from circle_method import circle_method
 from model.model import solve_smt
 from model.optimized_model import solve_smt_optimize
 from utils import parse_solution
-from config import DEFAULT_CONFIG, ExperimentConfig, ModelConfig
+from config import DEFAULT_CONFIG, MODELS, ExperimentConfig, ModelConfig
 from utils import save_results
 import z3
 from z3 import *
 
-def solve_sts(nTeams, model, symmetry_breaking=True, time_limit_s=300, opt=False):
+def solve_sts(nTeams, model, symmetry_breaking=True, is_optimization=False, time_limit_s=300):
     """
     Solve STS problem with precomputed home/away assignments.
     """
@@ -34,14 +34,14 @@ def solve_sts(nTeams, model, symmetry_breaking=True, time_limit_s=300, opt=False
     # Solve
     start_time = time.time()
     base_a, base_b, team_match_idx = circle_method(nTeams)
-    opt, solution, obj_value = solve_smt_optimize(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx) if opt else solve_smt(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx)
+    is_optimal, solution, obj_value = solve_smt_optimize(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx) if is_optimization else solve_smt(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx)
     end_time = time.time()
     total_time = end_time - start_time
     
     result_dict["time"] = min(math.floor(total_time), time_limit_s)
     result_dict["obj"] = obj_value
-    result_dict["optimal"] = opt
-    result_dict["sol"] = parse_solution(solution, base_a, base_b) if opt else []
+    result_dict["optimal"] = is_optimal
+    result_dict["sol"] = parse_solution(solution, base_a, base_b)
         
     return result_dict
 
@@ -76,7 +76,7 @@ def run_experiments(
                     model=model,
                     symmetry_breaking=sym,
                     time_limit_s=timeout_s,
-                    opt=model.opt
+                    is_optimization=model.opt,
                 )
 
                 current_results[key] = result
@@ -126,12 +126,14 @@ def main():
         default='res/SMT',
         help='Output directory for results (default: res/SMT)'
     )
-    
+
     args = parser.parse_args()
+
+    selected_models = [MODELS[name] for name in args.models]
     
     run_experiments(
         nteams_values=args.nteams,
-        models=args.models,
+        models=selected_models,
         timeout_s=args.timeout,
         sym_break=args.sym_break,
         output_dir=Path(args.output_dir)
@@ -140,3 +142,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# python your_script.py \
+#     --nteams 14 16 \
+#     --models "decision" "optimized" \
+#     --sym_break true false 

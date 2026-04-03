@@ -12,7 +12,7 @@ def parse_solution(
     Parse SMT solution into period x week matrix format.
     """
     if result == []:
-        return None
+        return []
     
     try:
         match_period = result
