@@ -119,8 +119,14 @@ def solve_smt_optimize(
             for w in range(n_weeks)
         ]
 
+        # Extract home/away assignments
+        is_home_a_solution = [
+            [bool(m.evaluate(is_home_a[w][k])) for k in range(n_periods)]
+            for w in range(n_weeks)
+        ]
+
         #return optimal,solution, objective value
         is_optimal = obj_val == 1
-        return is_optimal, match_period_solution, obj_val
+        return is_optimal, match_period_solution, obj_val, is_home_a_solution
     else:
-        return False, [], None
+        return False, [], None, None
