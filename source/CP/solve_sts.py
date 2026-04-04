@@ -2,7 +2,7 @@ import math
 import time
 import datetime
 import minizinc
-from minizinc import Instance, Model, Solver
+from minizinc import Instance, Model, Solver, Status
 import os
 from circle_method import circle_method
 from utils import parse_solution
@@ -26,13 +26,9 @@ def find_solution(n_teams, model, solver, symmetry_breaking, time_limit_s = 300)
         timeout=datetime.timedelta(milliseconds=remaining_time_ms)
     )
 
-    obj = result.objective
-    optimal = result.status.has_solution()
-    solution = parse_solution(result, base_a, base_b) if optimal else []
+    return base_a, base_b, result
 
-    return obj, optimal, solution
-
-def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, time_limit_s=300):
+def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, is_optimization=False, time_limit_s=300):
     """
     Solve STS problem with precomputed home/away assignments.
     """
@@ -52,9 +48,19 @@ def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, time_limit_s=3
     
     # Solve
     start_time = time.time()
-    obj, optimal, solution = find_solution(nTeams, model, solver, symmetry_breaking, time_limit_s)
+    base_a, base_b, result = find_solution(nTeams, model, solver, symmetry_breaking, time_limit_s)
     end_time = time.time()
     total_time = end_time - start_time
+    
+    # Whether a solution was found
+    has_sol = result.status.has_solution()
+
+    obj = result.objective if has_sol else None
+    if is_optimization:
+        optimal = result.status == Status.OPTIMAL_SOLUTION
+    else:  # decision version
+        optimal = result.status == Status.SATISFIED
+    solution = parse_solution(result, base_a, base_b, is_optimization=is_optimization) if has_sol else []
     
     result_dict["time"] = min(math.floor(total_time), time_limit_s)
     result_dict["optimal"] = optimal
