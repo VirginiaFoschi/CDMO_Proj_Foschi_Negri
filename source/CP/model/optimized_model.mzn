@@ -18,9 +18,8 @@ array[Weeks, 1..nPeriods] of int: team2;
 % Symmetry breaking flag
 bool: sym_break;
 
-% ================================================================
-% PRECOMPUTATION  (evaluated at compile time — zero runtime cost)
-% ================================================================
+
+% --- PRECOMPUTATION ---
 
 % teamMatch[t,w] = match index k involving team t in week w
 array[Teams, Weeks] of 1..nPeriods: teamMatch =
@@ -30,22 +29,17 @@ array[Teams, Weeks] of 1..nPeriods: teamMatch =
         ) | t in Teams, w in Weeks
     ]);
 
-% isTeam1[t,w] = true iff team t is in the team1 slot
-array[Teams, Weeks] of bool: isTeam1 =
-    array2d(Teams, Weeks, [
-        team1[w, teamMatch[t,w]] = t | t in Teams, w in Weeks
-    ]);
 
-% ================================================================
-% DECISION VARIABLES
-% ================================================================
+% --- DECISION VARIABLES ---
 
 array[Weeks, 1..nPeriods] of var Periods: matchPeriod;
-array[Weeks, 1..nPeriods] of var bool:    home;
+% swap[w,k] = 0 -> team1 is home, team2 is away
+% swap[w,k] = 1 -> team2 is home, team1 is away
+% removes the overhead of the solver generating hidden "view variables" to translate booleans into integers
+array[Weeks, 1..nPeriods] of var 0..1: swap;
 
-% ================================================================
-% PERIOD ASSIGNMENT CONSTRAINTS
-% ================================================================
+
+% --- PERIOD ASSIGNMENT CONSTRAINTS ---
 
 % C1: each week is a permutation of periods
 constraint forall(w in Weeks)(
@@ -62,20 +56,26 @@ constraint forall(t in Teams)(
     )
 );
 
-% ================================================================
-% HOME / AWAY BALANCE
-% ================================================================
 
-int: L = nWeeks div 2;
-int: U = L + 1;
+% --- SYMMETRY BREAKING ---
 
-array[Teams] of var L..U: homeCount;
+% Period-label symmetry
+constraint sym_break ->
+    forall(k in 1..nPeriods)( matchPeriod[1,k] = k );
+
+% Global swap flip symmetry (Force the first match of the first week to not swap)
+constraint sym_break -> swap[1,1] = 0;
+
+
+% --- OBJECTIVE WITH BOUNDS ---
+
+array[Teams] of var 0..nWeeks: homeCount;
 
 constraint forall(t in Teams)(
     homeCount[t] = sum(w in Weeks)(
         let { int: m = teamMatch[t,w] } in
-        if isTeam1[t,w] then bool2int(home[w,m])
-        else                  bool2int(not home[w,m])
+        if team1[w,m] == t then 1 - swap[w,m]
+        else                    swap[w,m]
         endif
     )
 );
@@ -83,19 +83,8 @@ constraint forall(t in Teams)(
 % Implied: total home games = total matches
 constraint sum(t in Teams)(homeCount[t]) = nWeeks * nPeriods;
 
-% ================================================================
-% SYMMETRY BREAKING
-% ================================================================
-% Period-label symmetry
-constraint sym_break ->
-    forall(k in 1..nPeriods)( matchPeriod[1,k] = k );
-
-% Global home/away flip symmetry
-constraint sym_break -> home[1,1] = true;
-
-% ================================================================
-% SOLVE
-% ================================================================
+int: L = 1;
+int: U = nWeeks;
 
 % homeGames + awayGames = nWeeks-> AwayGames = nWeeks - homeGames
 % |homeGames - awayGames|
@@ -103,6 +92,11 @@ constraint sym_break -> home[1,1] = true;
 % = |homeGames - nWeeks + homeGames|
 % = |2 * homeGames - nWeeks|
 
-var int: maxImbalance = max(t in Teams)(abs(2*homeCount[t] - nWeeks));
+% The heavy absolute max function (kept as required)
+var L..U: maxImbalance = max(t in Teams)(abs(2*homeCount[t] - nWeeks));
+
+constraint maxImbalance mod 2 = 1;
+
+% --- SOLVE ---
 
 solve minimize maxImbalance;
