@@ -6,13 +6,15 @@ import json
 def parse_solution(
     result,
     base_a: List[List[int]],
-    base_b: List[List[int]]
+    base_b: List[List[int]],
+    is_optimization: bool = False,
+    is_home_a: List[List[bool]] = None
 ) -> Optional[List[List[List[int]]]]:
     """
     Parse SMT solution into period x week matrix format.
     """
     if result == []:
-        return None
+        return []
     
     try:
         match_period = result
@@ -20,7 +22,6 @@ def parse_solution(
         n_weeks = len(match_period)
         n_periods = len(match_period[0])
 
-        # Initialize matrix: periods x weeks
         schedule = [
             [None for _ in range(n_weeks)]
             for _ in range(n_periods)
@@ -29,10 +30,18 @@ def parse_solution(
         for w in range(n_weeks):
             for k in range(n_periods):
                 period = match_period[w][k] - 1  # convert to 0-index
-                team_a = base_a[w][k]+1
-                team_b = base_b[w][k]+1
+                team_a = base_a[w][k] + 1
+                team_b = base_b[w][k] + 1
 
-                schedule[period][w] = [team_a, team_b]
+                if is_optimization and is_home_a is not None:
+                    # is_home_a[w][k] = True means team_a is home
+                    if is_home_a[w][k]:
+                        schedule[period][w] = [team_a, team_b]
+                    else:
+                        schedule[period][w] = [team_b, team_a]
+                else:
+                    # Decision version: team_a is always home by convention
+                    schedule[period][w] = [team_a, team_b]
 
         return schedule
 

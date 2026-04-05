@@ -33,9 +33,9 @@ array[Teams, Weeks] of 1..nPeriods: teamMatch =
 % --- DECISION VARIABLES ---
 
 array[Weeks, 1..nPeriods] of var Periods: matchPeriod;
+
 % swap[w,k] = 0 -> team1 is home, team2 is away
 % swap[w,k] = 1 -> team2 is home, team1 is away
-% removes the overhead of the solver generating hidden "view variables" to translate booleans into integers
 array[Weeks, 1..nPeriods] of var 0..1: swap;
 
 
@@ -86,17 +86,18 @@ constraint sum(t in Teams)(homeCount[t]) = nWeeks * nPeriods;
 int: L = 1;
 int: U = nWeeks;
 
-% homeGames + awayGames = nWeeks-> AwayGames = nWeeks - homeGames
-% |homeGames - awayGames|
-% = |homeGames - (nWeeks - homeGames)|
-% = |homeGames - nWeeks + homeGames|
-% = |2 * homeGames - nWeeks|
-
 % The heavy absolute max function (kept as required)
 var L..U: maxImbalance = max(t in Teams)(abs(2*homeCount[t] - nWeeks));
 
 constraint maxImbalance mod 2 = 1;
 
 % --- SOLVE ---
-
-solve minimize maxImbalance;
+solve 
+    :: seq_search([
+        int_search([matchPeriod[w,k] | w in Weeks, k in 1..nPeriods], 
+                   dom_w_deg, indomain_split), 
+        int_search([swap[w,k] | w in Weeks, k in 1..nPeriods], 
+                    dom_w_deg, indomain_split)
+    ]) 
+    :: restart_luby(50) 
+    minimize maxImbalance;

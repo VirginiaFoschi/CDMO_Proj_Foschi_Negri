@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List
 from solve_sts import solve_sts
 from utils import parse_solution
-from config import DEFAULT_CONFIG, ExperimentConfig, ModelConfig
+from config import DEFAULT_CONFIG, MODELS, ExperimentConfig, ModelConfig
 from utils import save_results
 
 def run_experiments(
@@ -15,7 +15,8 @@ def run_experiments(
     models: List[ModelConfig],
     timeout_s: int,
     sym_break: List[bool],
-    output_dir: Path
+    output_dir: Path,
+    solver_verbose=False
 ):
     """
     Run experiments for all combinations of models, teams, and solvers
@@ -27,7 +28,7 @@ def run_experiments(
         for model in models:
             for solver_name in solvers:
                 if model.opt:
-                    key = f"{solver_name}_optimized"
+                    key = f"{solver_name}_{model.name}"
                 else:
                     key = f"{solver_name}"
                 print(f"\nRunning {key}...")
@@ -42,6 +43,7 @@ def run_experiments(
                         model=model,
                         solver_name=solver_name,
                         symmetry_breaking=sym,
+                        is_optimization=model.opt,
                         time_limit_s=timeout_s
                     )
 
@@ -88,7 +90,7 @@ def main():
     )
     parser.add_argument(
         '--sym_break',
-        type=bool,
+        type=lambda x: x.lower() in ("true", "1", "yes", "t"),
         nargs='+',
         default=DEFAULT_CONFIG.sym_break,
         help='Whether to use symmetry breaking'
@@ -99,13 +101,15 @@ def main():
         default='res/CP',
         help='Output directory for results (default: res/CP)'
     )
-    
+
     args = parser.parse_args()
+
+    selected_models = [MODELS[m] for m in args.models]
     
     run_experiments(
         nteams_values=args.nteams,
         solvers=args.solvers,
-        models=args.models,
+        models=selected_models,
         timeout_s=args.timeout,
         sym_break=args.sym_break,
         output_dir=Path(args.output_dir)
@@ -116,8 +120,6 @@ if __name__ == "__main__":
     main()
 
 # docker build -t project-solver .
-# docker run -it --rm project-solver /bin/bash
-# python source/CP/run.py
 
 # docker run -it --rm `
 #    -v ${PWD}:/app `
@@ -125,4 +127,5 @@ if __name__ == "__main__":
 #   --entrypoint bash `
 #   project-solver
 
+# python source/CP/run.py
 

@@ -11,12 +11,12 @@ from circle_method import circle_method
 from model.model import solve_smt
 from model.optimized_model import solve_smt_optimize
 from utils import parse_solution
-from config import DEFAULT_CONFIG, ExperimentConfig, ModelConfig
+from config import DEFAULT_CONFIG, MODELS, ExperimentConfig, ModelConfig
 from utils import save_results
 import z3
 from z3 import *
 
-def solve_sts(nTeams, model, symmetry_breaking=True, time_limit_s=300, opt=False):
+def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, is_optimization=False, time_limit_s=300):
     """
     Solve STS problem with precomputed home/away assignments.
     """
@@ -34,23 +34,30 @@ def solve_sts(nTeams, model, symmetry_breaking=True, time_limit_s=300, opt=False
     # Solve
     start_time = time.time()
     base_a, base_b, team_match_idx = circle_method(nTeams)
-    opt, solution, obj_value = solve_smt_optimize(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx) if opt else solve_smt(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx)
+    if is_optimization:
+        is_optimal, solution, obj_value, is_home_solution = solve_smt_optimize(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx)
+        sol = parse_solution(solution, base_a, base_b, is_home_a = is_home_solution, is_optimization=True)
+    else:
+        is_optimal, solution, obj_value = solve_smt(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx)
+        sol = parse_solution(solution, base_a, base_b, is_optimization=False)    
     end_time = time.time()
     total_time = end_time - start_time
     
     result_dict["time"] = min(math.floor(total_time), time_limit_s)
     result_dict["obj"] = obj_value
-    result_dict["optimal"] = opt
-    result_dict["sol"] = parse_solution(solution, base_a, base_b) if opt else []
+    result_dict["optimal"] = is_optimal
+    result_dict["sol"] = sol
         
     return result_dict
 
 def run_experiments(
     nteams_values: List[int],
     models: List[ModelConfig],
+    solvers: List[str],
     timeout_s: int,
     sym_break: List[bool],
-    output_dir: Path
+    output_dir: Path,
+    solver_verbose=False
 ):
     """
     Run experiments for all combinations of models, teams, and solvers
@@ -60,30 +67,33 @@ def run_experiments(
     for n_teams in nteams_values:
         current_results = {}
         for model in models:
-            if model.opt:
-                key = f"z3_optimized"
-            else:
-                key = f"z3"
-            print(f"\nRunning {key}...")
+            for solver_name in solvers:
+                if model.opt:
+                    key = f"{solver_name}_optimized"
+                else:
+                    key = f"{solver_name}"
             
-            for sym in sym_break:
-
-                if sym:
-                    key += "_symbreak"
-
-                result = solve_sts(
-                    nTeams=n_teams,
-                    model=model,
-                    symmetry_breaking=sym,
-                    time_limit_s=timeout_s,
-                    opt=model.opt
-                )
-
-                current_results[key] = result
+                print(f"\nRunning {key}...")
                 
-                print(f"  Total time: {result['time']}s")
-                print(f"  Optimal: {result['optimal']}")
-                print(f"  Solution found: {bool(result['sol'])}")
+                for sym in sym_break:
+
+                    if sym:
+                        key += "_symbreak"
+
+                    result = solve_sts(
+                        nTeams=n_teams,
+                        model=model,
+                        symmetry_breaking=sym,
+                        time_limit_s=timeout_s,
+                        solver_name=solver_name,
+                        is_optimization=model.opt,
+                    )
+
+                    current_results[key] = result
+                    
+                    print(f"  Total time: {result['time']}s")
+                    print(f"  Optimal: {result['optimal']}")
+                    print(f"  Solution found: {bool(result['sol'])}")
             
         output_file = output_dir / f"{n_teams}.json"
         save_results(current_results, output_file)
@@ -108,6 +118,13 @@ def main():
         help='List of models to use'
     )
     parser.add_argument(
+        '--solvers',
+        type=str,
+        nargs='+',
+        default=DEFAULT_CONFIG.solvers,
+        help='List of solvers to use'
+    )
+    parser.add_argument(
         '--timeout',
         type=int,
         default=DEFAULT_CONFIG.timeout_s,
@@ -115,7 +132,7 @@ def main():
     )
     parser.add_argument(
         '--sym_break',
-        type=bool,
+        type=lambda x: x.lower() in ("true", "1", "yes", "t"),
         nargs='+',
         default=DEFAULT_CONFIG.sym_break,
         help='Whether to use symmetry breaking'
@@ -126,12 +143,15 @@ def main():
         default='res/SMT',
         help='Output directory for results (default: res/SMT)'
     )
-    
+
     args = parser.parse_args()
+
+    selected_models = [MODELS[name] for name in args.models]
     
     run_experiments(
         nteams_values=args.nteams,
-        models=args.models,
+        solvers=args.solvers,
+        models=selected_models,
         timeout_s=args.timeout,
         sym_break=args.sym_break,
         output_dir=Path(args.output_dir)
@@ -140,3 +160,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# python your_script.py \
+#     --nteams 14 16 \
+#     --models "decision" "optimized" \
+#     --sym_break true false 

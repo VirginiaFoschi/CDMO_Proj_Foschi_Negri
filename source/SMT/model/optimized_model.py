@@ -68,12 +68,14 @@ def solve_smt_optimize(
 
     ## --- Optimization -----
 
-    # Upper and lower bound for home games per team
-    L = n_weeks // 2
-    U = L + 1
-
     # A single integer variable that will track the worst-case difference between home and away games across all team
     max_imbalance = Int('max_imbalance')
+
+    # L = 1 (lower bound), U = n - 1 (upper bound)
+    opt.add(max_imbalance >= 1)
+    opt.add(max_imbalance <= n_teams - 1)
+
+    opt.add(max_imbalance % 2 == 1)
     
     for t in range(n_teams):
         # calculate number of home games for team t: this list will store 1 if the team plays at home in a week, 0 otherwise
@@ -91,8 +93,6 @@ def solve_smt_optimize(
         
         # total number of home games for team t
         h_t = Sum(home_count)
-        opt.add(h_t >= L)
-        opt.add(h_t <= U)
         
         # Difference = |Home - Away|
         # Since Away = (n_weeks - Home), Diff = |2*Home - n_weeks|
@@ -119,7 +119,14 @@ def solve_smt_optimize(
             for w in range(n_weeks)
         ]
 
-        #return optimal, solution, objective value
-        return True, match_period_solution, obj_val
+        # Extract home/away assignments
+        is_home_a_solution = [
+            [bool(m.evaluate(is_home_a[w][k])) for k in range(n_periods)]
+            for w in range(n_weeks)
+        ]
+
+        #return optimal,solution, objective value
+        is_optimal = obj_val == 1
+        return is_optimal, match_period_solution, obj_val, is_home_a_solution
     else:
-        return False, [], None
+        return False, [], None, None

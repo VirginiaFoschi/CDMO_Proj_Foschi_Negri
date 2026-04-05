@@ -12,21 +12,25 @@ from minizinc import Result
 def parse_solution(
     result: Result,
     base_a: List[List[int]],
-    base_b: List[List[int]]
+    base_b: List[List[int]],
+    is_optimization: bool = False
 ) -> Optional[List[List[List[int]]]]:
     """
     Returns:
         Matrix (n/2) x (n-1)
-        sol[period][week] = [team1, team2]
+        sol[period][week] = [home_team, away_team]
     """
     if result.solution is None:
-        return None
+        return []
 
     try:
         match_period = result.solution.matchPeriod
+        
+        # Only read home variable in optimization version
+        home = result.solution.swap if is_optimization else None
 
         n_weeks = len(match_period)
-        n_periods = len(match_period[0])  # should be n/2
+        n_periods = len(match_period[0])
 
         # Initialize matrix: periods x weeks
         schedule = [
@@ -37,17 +41,24 @@ def parse_solution(
         for w in range(n_weeks):
             for k in range(n_periods):
                 period = match_period[w][k] - 1  # convert to 0-index
-                team_a = int(base_a[w][k]) + 1
-                team_b = int(base_b[w][k]) + 1 # convert to 1-index
+                team_a = int(base_a[w][k]) + 1   # convert to 1-index
+                team_b = int(base_b[w][k]) + 1
 
-                schedule[period][w] = [team_a, team_b]
+                if is_optimization and home is not None:
+                    # home[w][k] = True means team_a is home
+                    if home[w][k]:
+                        schedule[period][w] = [team_a, team_b]
+                    else:
+                        schedule[period][w] = [team_b, team_a]
+                else:
+                    # Decision version: team_a is always home by convention
+                    schedule[period][w] = [team_a, team_b]
 
         return schedule
 
     except Exception as e:
         print(f"Warning: Could not parse solution: {e}")
         return None
-
 def format_sol(sol):  
     if sol == []:
         return "[]"
