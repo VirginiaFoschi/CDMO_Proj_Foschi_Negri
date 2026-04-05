@@ -17,6 +17,13 @@ SOLVERS = {
     "MIP": ["cbc", "highs", "scip"], 
 }
 
+MODEL_TYPES = {
+    "CP":  ["decision", "optimized", "optimized_dwd_luby"],
+    "SAT": ["decision", "optimized"], 
+    "SMT": ["decision", "optimized"], 
+    "MIP": ["decision", "optimized"], 
+}
+
 ALL_PARADIGMS  = list(MODEL_FILES.keys())
 ALL_NTEAMS     = [6, 8, 10, 12, 14, 16, 18, 20, 22]
 DEFAULT_OUTDIR = "res"
@@ -31,8 +38,18 @@ def filter_solvers(requested: list[str], paradigm: str) -> list[str]:
     kept    = [s for s in requested if s in valid]
     dropped = [s for s in requested if s not in valid]
     if dropped:
-        print(f"  [WARN] {paradigm}: ignoring invalid solver(s) {dropped} "
-              f"(valid: {valid})")
+        print(f"  [WARN] {paradigm}: ignoring invalid solver(s) {dropped} ")
+    return kept
+
+
+def filter_models(requested: list[str], paradigm: str) -> list[str]:
+    valid = MODEL_TYPES[paradigm]
+    if len(requested) == 1 and requested[0].lower() == "all":
+        return valid  # return all valid models for this paradigm
+    kept    = [m for m in requested if m in valid]
+    dropped = [m for m in requested if m not in valid]
+    if dropped:
+        print(f"  [WARN] {paradigm}: ignoring invalid model(s) {dropped}")
     return kept
 
 
@@ -53,7 +70,9 @@ def build_argv(args, paradigm: str) -> list[str]:
         argv += ["--timeout", str(args.timeout)]
 
     if args.models is not _NOT_SET:
-        argv += ["--models", *args.models]
+        kept = filter_models(args.models, paradigm)
+        if kept:
+            argv += ["--models", *kept]
 
     if args.sym_break is not _NOT_SET:
         argv += ["--sym_break", *[str(s) for s in args.sym_break]]
@@ -158,7 +177,7 @@ def main():
     args.sym_break = resolve_sym_break(args.sym_break)
 
     def fmt(val):
-        return "(paradigm default)" if val is _NOT_SET else val
+        return "default" if val is _NOT_SET else val
 
     print(f"\nUnified Experiment Runner")
     print(f"  Paradigms  : {args.paradigms}")
