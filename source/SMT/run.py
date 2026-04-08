@@ -33,13 +33,13 @@ def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, is_optimizatio
     
     # Solve
     start_time = time.time()
-    base_a, base_b, team_match_idx = circle_method(nTeams)
+    team1, team2, team_match_idx = circle_method(nTeams)
     if is_optimization:
-        is_optimal, solution, obj_value, is_home_solution = solve_smt_optimize(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx)
-        sol = parse_solution(solution, base_a, base_b, is_home_a = is_home_solution, is_optimization=True)
+        is_optimal, solution, obj_value, swap_solution = solve_smt_optimize(nTeams, time_limit_s, symmetry_breaking, team1=team1, team2=team2, team_match_idx=team_match_idx)
+        sol = parse_solution(solution, team1, team2, swap=swap_solution, is_optimization=True)
     else:
-        is_optimal, solution, obj_value = solve_smt(nTeams, time_limit_s, symmetry_breaking, base_a=base_a, base_b=base_b, team_match_idx=team_match_idx)
-        sol = parse_solution(solution, base_a, base_b, is_optimization=False)    
+        is_optimal, solution, obj_value = solve_smt(nTeams, time_limit_s, symmetry_breaking, team1=team1, team2=team2, team_match_idx=team_match_idx)
+        sol = parse_solution(solution, team1, team2, is_optimization=False)    
     end_time = time.time()
     total_time = end_time - start_time
     

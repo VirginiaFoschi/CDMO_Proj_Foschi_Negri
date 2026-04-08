@@ -11,11 +11,11 @@ def find_solution(n_teams, model, solver, symmetry_breaking, time_limit_s = 300)
 
     instance = Instance(solver, model)
 
-    base_a, base_b, precomputation_time = circle_method(n_teams)
+    team1, team2, precomputation_time = circle_method(n_teams)
 
     instance["nTeams"] = n_teams
-    instance["team1"] = base_a
-    instance["team2"] = base_b
+    instance["team1"] = team1
+    instance["team2"] = team2
     instance["sym_break"] = symmetry_breaking
 
     print(f"Solving for n = {n_teams}...")
@@ -26,7 +26,7 @@ def find_solution(n_teams, model, solver, symmetry_breaking, time_limit_s = 300)
         timeout=datetime.timedelta(milliseconds=remaining_time_ms)
     )
 
-    return base_a, base_b, result
+    return team1, team2, result
 
 def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, is_optimization=False, time_limit_s=300):
     """
@@ -48,7 +48,7 @@ def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, is_optimizatio
     
     # Solve
     start_time = time.time()
-    base_a, base_b, result = find_solution(nTeams, model, solver, symmetry_breaking, time_limit_s)
+    team1, team2, result = find_solution(nTeams, model, solver, symmetry_breaking, time_limit_s)
     end_time = time.time()
     total_time = end_time - start_time
     
@@ -60,7 +60,7 @@ def solve_sts(nTeams, model, solver_name, symmetry_breaking=True, is_optimizatio
         optimal = result.status == Status.OPTIMAL_SOLUTION
     else:  # decision version
         optimal = result.status == Status.SATISFIED
-    solution = parse_solution(result, base_a, base_b, is_optimization=is_optimization) if has_sol else []
+    solution = parse_solution(result, team1, team2, is_optimization=is_optimization) if has_sol else []
     
     result_dict["time"] = min(math.floor(total_time), time_limit_s)
     result_dict["optimal"] = optimal

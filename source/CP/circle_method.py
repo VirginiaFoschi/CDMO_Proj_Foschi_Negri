@@ -20,29 +20,29 @@ def circle_method(n_teams: int) -> Tuple[List[List[int]], List[List[int]], float
         n_weeks = n_teams - 1
         n_periods = n_teams // 2
         
-        base_a = []
-        base_b = []
+        team1 = []
+        team2 = []
         
         for w in range(1, n_weeks + 1):  
-            week_a = []
-            week_b = []
+            week_team1 = []
+            week_team2 = []
             
             for k in range(1, n_periods + 1):  
                 if k == 1:
                     # First match: team 0 vs week number
-                    team_a = 0
-                    team_b = w
+                    t1 = 0
+                    t2 = w
                 else:
                     # Other matches: symmetric rotation
-                    team_a = wrap_1_to_m(w - (k - 1), n_weeks)
-                    team_b = wrap_1_to_m(w + (k - 1), n_weeks)
+                    t1 = wrap_1_to_m(w - (k - 1), n_weeks)
+                    t2 = wrap_1_to_m(w + (k - 1), n_weeks)
                 
-                week_a.append(team_a)
-                week_b.append(team_b)
+                week_team1.append(t1)
+                week_team2.append(t2)
             
-            base_a.append(week_a)
-            base_b.append(week_b)
+            team1.append(week_team1)
+            team2.append(week_team2)
         
         computation_time_ms = (time.time() - start_time) * 1000
         
-        return base_a, base_b, computation_time_ms
+        return team1, team2, computation_time_ms
