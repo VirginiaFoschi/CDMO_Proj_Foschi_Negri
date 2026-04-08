@@ -6,8 +6,8 @@ def solve_smt_optimize(
     n_teams: int,
     timeout_s: int = 300,
     symm_break: bool = True, 
-    base_a: List[List[int]] = None, 
-    base_b: List[List[int]] = None,    
+    team1: List[List[int]] = None, 
+    team2: List[List[int]] = None,    
     team_match_idx: List[List[int]] = None
 ) -> Tuple[bool, int, List[List[int]], List[List[bool]]]:
     """
@@ -27,11 +27,11 @@ def solve_smt_optimize(
         for w in range(n_weeks)
     ]
     
-    # is_home_a[w][k] is BOOLEAN
-    # True  => base_a[w][k] is home
-    # False => base_b[w][k] is home
-    is_home_a = [
-        [Bool(f"ha_w{w}_k{k}") for k in range(n_periods)]
+    # swap[w][k] is BOOLEAN
+    # True  => team2[w][k] is home
+    # False => team1[w][k] is home
+    swap = [
+        [Bool(f"swap_w{w}_k{k}") for k in range(n_periods)]
         for w in range(n_weeks)
     ]
 
@@ -64,7 +64,7 @@ def solve_smt_optimize(
         for k in range(n_periods):
             opt.add(match_period[0][k] == k + 1)
             # Fix the first match of first week to avoid Home/Away swap symmetry
-            opt.add(is_home_a[0][0] == True)
+            opt.add(swap[0][0] == False)  # team1[0][0] is home in week 0, match 0
 
     ## --- Optimization -----
 
@@ -84,12 +84,12 @@ def solve_smt_optimize(
         for w in range(n_weeks):
             k = team_match_idx[t][w]
             
-            # If team t is base_a: home if is_home_a == True
-            # If team t is base_b: home if is_home_a == False
-            if base_a[w][k] == t:
-                home_count.append(If(is_home_a[w][k], 1, 0))
+            # If team t is team1: home if swap == False
+            # If team t is team2: home if swap == True
+            if team1[w][k] == t:
+                home_count.append(If(swap[w][k] == False, 1, 0))
             else:
-                home_count.append(If(is_home_a[w][k], 0, 1))
+                home_count.append(If(swap[w][k] == True, 1, 0))
         
         # total number of home games for team t
         h_t = Sum(home_count)
@@ -120,13 +120,13 @@ def solve_smt_optimize(
         ]
 
         # Extract home/away assignments
-        is_home_a_solution = [
-            [bool(m.evaluate(is_home_a[w][k])) for k in range(n_periods)]
+        swap_solution = [
+            [bool(m.evaluate(swap[w][k], model_completion=True)) for k in range(n_periods)]
             for w in range(n_weeks)
         ]
 
         #return optimal,solution, objective value
         is_optimal = obj_val == 1
-        return is_optimal, match_period_solution, obj_val, is_home_a_solution
+        return is_optimal, match_period_solution, obj_val, swap_solution
     else:
         return False, [], None, None

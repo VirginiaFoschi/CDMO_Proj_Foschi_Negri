@@ -15,30 +15,30 @@ def circle_method(n_teams: int) -> Dict:
     n_weeks = n_teams - 1
     n_periods = n_teams // 2
 
-    base_a = []
-    base_b = []
+    team1 = []
+    team2 = []
     # team_match_idx[t][w] stores which match index 'k' team 't' plays in week 'w'
     team_match_idx = [[-1 for _ in range(n_weeks)] for _ in range(n_teams)]
 
     for w in range(1, n_weeks + 1):
-        week_a = []
-        week_b = []
+        week_team1 = []
+        week_team2 = []
         w_idx = n_weeks - w
         for k in range(1, n_periods + 1):
             if k == 1:
-                team_a = 0
-                team_b = w
+                t1 = 0
+                t2 = w
             else:
-                team_a = wrap_1_to_m(w - (k - 1), n_weeks)
-                team_b = wrap_1_to_m(w + (k - 1), n_weeks)
+                t1 = wrap_1_to_m(w - (k - 1), n_weeks)
+                t2 = wrap_1_to_m(w + (k - 1), n_weeks)
 
-            team_match_idx[team_a][w_idx] = k-1
-            team_match_idx[team_b][w_idx] = k-1
+            team_match_idx[t1][w_idx] = k-1
+            team_match_idx[t2][w_idx] = k-1
 
-            week_a.append(team_a)
-            week_b.append(team_b)
+            week_team1.append(t1)
+            week_team2.append(t2)
 
-        base_a.append(week_a)
-        base_b.append(week_b)
+        team1.append(week_team1)
+        team2.append(week_team2)
 
-    return base_a, base_b, team_match_idx
+    return team1, team2, team_match_idx

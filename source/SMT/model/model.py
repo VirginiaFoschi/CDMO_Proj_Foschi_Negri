@@ -6,8 +6,8 @@ def solve_smt(
     n_teams: int = None,
     timeout_s: int = 300,
     symm_break: bool = True, 
-    base_a: list = None,
-    base_b: list = None,    
+    team1: list = None,
+    team2: list = None,    
     team_match_idx: list = None
 ) -> Dict:
     """
