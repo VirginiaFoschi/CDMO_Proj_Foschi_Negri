@@ -48,18 +48,14 @@ docker build -t project-solver .
 - **Option A — Run directly**
 
   ```bash
-  docker run --rm -v ${PWD}:/app -w /app sts-solver python run_all.py [OPTIONS]
+  docker run --rm -v ${PWD}:/app -w /app sts-img python run_all.py [OPTIONS]
   ```
 
 - **Option B — Enter the container first and then run**
 
   ```bash
   # Open a shell inside the container
-  docker run -it --rm \
-    -v ${PWD}:/app \
-    -w /app \
-    --entrypoint bash \
-    sts-solver
+  docker run -it --rm -v ${PWD}:/app -w /app --entrypoint bash sts-img
   ```
 
   Then run:
