@@ -41,7 +41,7 @@ No other dependencies are required — all solvers and packages are installed in
    
 From the project root, build the image: 
 ```bash
-docker build -t project-solver .
+docker build -t sts-img .
 ```
 ### 3. Run Experiments
 
