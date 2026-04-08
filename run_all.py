@@ -12,9 +12,9 @@ MODEL_FILES = {
 
 SOLVERS = {
     "CP":  ["gecode",  "chuffed"],
-    "SAT": ["solver_sat_1", "solver_sat_2"], 
+    "SAT": ["glucose4", "cadical195", "minisat22"],
     "SMT": ["z3"], 
-    "MIP": ["cbc", "highs", "scip"], 
+    "MIP": ["cbc", "highs", "glpk"], 
 }
 
 MODEL_TYPES = {
