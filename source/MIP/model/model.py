@@ -1,6 +1,60 @@
-
 from typing import List, Optional, Tuple
-import pulp
+from pyomo.environ import (
+    ConcreteModel, RangeSet, Var, Binary, Integers,
+    Constraint, ConstraintList, Objective, minimize,
+    SolverFactory, value as pyomo_value
+)
+
+
+def _solve(model, solver_type: str, timeout_s: int, verbose: bool):
+    sf_name = solver_type.lower()
+    if sf_name == "highs":
+        sf_name = "appsi_highs"
+
+    sf = SolverFactory(sf_name)
+
+    if sf_name == "cbc":
+        sf.options["sec"]     = timeout_s
+        sf.options["threads"] = 1
+    elif sf_name == "glpk":
+        sf.options["tmlim"] = timeout_s
+    elif sf_name == "appsi_highs":
+        sf.options["time_limit"] = timeout_s
+
+    return sf.solve(model, tee=verbose, timelimit=timeout_s)
+
+
+def _check_status(result) -> bool:
+    try:
+        tc = str(result.solver.termination_condition).lower()
+        solved = tc in ("optimal", "feasible", "maxtimelimit", "other")
+        try:
+            ub = result.Problem.Upper_bound
+            if ub is None or ub > 1e29:
+                solved = False
+        except Exception:
+            pass
+        return solved
+    except Exception:
+        return False
+
+
+def _extract_periods(model, n_weeks: int, n_periods: int) -> List[List[int]]:
+    match_period_solution = []
+    for w in range(n_weeks):
+        week_solution = []
+        for k in range(n_periods):
+            assigned_period = None
+            for p in range(1, n_periods + 1):
+                val = pyomo_value(model.x[w, k, p])
+                if val is not None and val > 0.5:
+                    assigned_period = p
+                    break
+            if assigned_period is None:
+                raise RuntimeError(f"No assigned period for week {w}, match {k}")
+            week_solution.append(assigned_period)
+        match_period_solution.append(week_solution)
+    return match_period_solution
 
 
 def solve_mip(
@@ -13,132 +67,49 @@ def solve_mip(
     solver_type: str = "cbc",
     solver_verbose: bool = False,
 ) -> Tuple[bool, List[List[int]], None]:
-
-    # Basic checks
+    """Decision version of the MIP model (Pyomo)."""
     if n_teams % 2 != 0:
         raise ValueError("Number of teams must be even.")
-
     if base_a is None or base_b is None or team_match_idx is None:
         raise ValueError("base_a, base_b, and team_match_idx must be provided.")
 
-    n_weeks = n_teams - 1
+    n_weeks   = n_teams - 1
     n_periods = n_teams // 2
 
-    if len(base_a) != n_weeks or len(base_b) != n_weeks:
-        raise ValueError("base_a and base_b must have length n_weeks.")
-    if len(team_match_idx) != n_teams:
-        raise ValueError("team_match_idx must have one row per team.")
+    model   = ConcreteModel()
+    model.W = RangeSet(0, n_weeks - 1)
+    model.K = RangeSet(0, n_periods - 1)
+    model.P = RangeSet(1, n_periods)
 
-    # Create MIP model (decision version → dummy objective)
-    prob = pulp.LpProblem("STS_MIP_Decision", pulp.LpMinimize)
+    model.x = Var(model.W, model.K, model.P, domain=Binary)
+    model.h = Var(model.W, model.K, domain=Binary)
 
-    # x[w][k][p] = 1 if match k in week w is assigned to period p
-    x = pulp.LpVariable.dicts(
-        "x",
-        (range(n_weeks), range(n_periods), range(1, n_periods + 1)),
-        lowBound=0,
-        upBound=1,
-        cat=pulp.LpBinary,
-    )
+    def one_period_rule(m, w, k):
+        return sum(m.x[w, k, p] for p in m.P) == 1
+    model.one_period = Constraint(model.W, model.K, rule=one_period_rule)
 
-    # h[w][k] = 1 if base_a[w][k] plays at home (kept for consistency with SMT)
-    h = pulp.LpVariable.dicts(
-        "h",
-        (range(n_weeks), range(n_periods)),
-        lowBound=0,
-        upBound=1,
-        cat=pulp.LpBinary,
-    )
+    def one_match_per_period_rule(m, w, p):
+        return sum(m.x[w, k, p] for k in m.K) == 1
+    model.one_match_per_period = Constraint(model.W, model.P, rule=one_match_per_period_rule)
 
-    # --- Constraints ---
-
-    # Each match must be assigned to exactly one period
-    for w in range(n_weeks):
-        for k in range(n_periods):
-            prob += (
-                pulp.lpSum(x[w][k][p] for p in range(1, n_periods + 1)) == 1
-            )
-
-    # Each period in a week hosts exactly one match
-    for w in range(n_weeks):
-        for p in range(1, n_periods + 1):
-            prob += (
-                pulp.lpSum(x[w][k][p] for k in range(n_periods)) == 1
-            )
-
-    # A team can appear at most twice in the same period
+    model.max_twice = ConstraintList()
     for t in range(n_teams):
         for p in range(1, n_periods + 1):
-            prob += (
-                pulp.lpSum(
-                    x[w][team_match_idx[t][w]][p]
-                    for w in range(n_weeks)
-                ) <= 2
+            model.max_twice.add(
+                sum(model.x[w, team_match_idx[t][w], p] for w in range(n_weeks)) <= 2
             )
 
-    # --- Symmetry breaking (same idea as in SMT) ---
     if symm_break:
-
-        # Fix first week: match k goes to period k+1
+        model.sb = ConstraintList()
         for k in range(n_periods):
-            prob += (x[0][k][k + 1] == 1)
+            model.sb.add(model.x[0, k, k + 1] == 1)
+        model.sb.add(model.h[0, 0] == 1)
 
-        # Fix orientation of first match
-        prob += (h[0][0] == 1)
+    model.obj = Objective(expr=0, sense=minimize)
 
-    # Dummy objective (pure feasibility)
-    prob += 0
+    result = _solve(model, solver_type, timeout_s, solver_verbose)
 
-    # --- Solver selection ---
-    solver_type = solver_type.lower()
-
-    if solver_type == "cbc":
-        solver = pulp.PULP_CBC_CMD(
-            msg=solver_verbose,
-            timeLimit=timeout_s,
-        )
-    elif solver_type == "highs":
-        solver = pulp.HiGHS(
-            msg=solver_verbose,
-            timeLimit=timeout_s,
-        )
-    elif solver_type == "scip":
-        solver = pulp.SCIP_PY(
-            msg=solver_verbose,
-            timeLimit=timeout_s,
-        )
-    else:
-        raise ValueError("solver_type must be one of {'cbc', 'highs', 'scip'}")
-
-    # Solve model
-    prob.solve(solver)
-
-    status_name = pulp.LpStatus[prob.status]
-    solved = status_name in {"Optimal", "Feasible"}
-
-    if not solved:
+    if not _check_status(result):
         return False, [], None
 
-    # Extract solution: for each week and match, return the assigned period
-    match_period_solution: List[List[int]] = []
-
-    for w in range(n_weeks):
-        week_solution = []
-        for k in range(n_periods):
-            assigned_period = None
-            for p in range(1, n_periods + 1):
-                val = pulp.value(x[w][k][p])
-                if val is not None and val > 0.5:
-                    assigned_period = p
-                    break
-
-            if assigned_period is None:
-                raise RuntimeError(
-                    f"No assigned period found for week {w}, match {k}"
-                )
-
-            week_solution.append(assigned_period)
-
-        match_period_solution.append(week_solution)
-
-    return True, match_period_solution, None
+    return True, _extract_periods(model, n_weeks, n_periods), None

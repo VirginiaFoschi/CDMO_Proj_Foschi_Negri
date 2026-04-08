@@ -1,12 +1,10 @@
 # Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
-# Set environment variables to prevent pyc files and buffer output
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies required for MiniZinc and python-sat
-# (python-sat compiles some solvers from C/C++ source via cffi)
+# Install system dependencies required for MiniZinc, python-sat, and Pyomo solvers
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     wget \
@@ -26,6 +24,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     make \
     libffi-dev \
+    coinor-cbc \
+    coinor-libcbc-dev \
+    glpk-utils \
  && rm -rf /var/lib/apt/lists/*
 
 # --- Install MiniZinc System Binary ---
@@ -36,7 +37,6 @@ RUN wget https://github.com/MiniZinc/MiniZincIDE/releases/download/${MINIZINC_VE
     && mv MiniZincIDE-${MINIZINC_VERSION}-bundle-linux-${MINIZINC_ARCH} /opt/minizinc \
     && rm MiniZincIDE-${MINIZINC_VERSION}-bundle-linux-${MINIZINC_ARCH}.tgz
 
-# Add MiniZinc to PATH so Python can find it
 ENV PATH="/opt/minizinc/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/minizinc/lib:${LD_LIBRARY_PATH}"
 
@@ -49,7 +49,7 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Smoke-test: verify the solvers we use are actually available in PySAT
+# Smoke-test: verify SAT solvers are available
 RUN python -c "\
 from pysat.solvers import Solver; \
 [Solver(name=s).delete() for s in ['glucose3','glucose4','minisat22','cadical195','maplesat','mergesat3']]; \
