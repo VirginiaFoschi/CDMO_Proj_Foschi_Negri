@@ -129,34 +129,34 @@ def main():
         description="Run tournament scheduling experiments with MIP models"
     )
     parser.add_argument(
-        "--nteams",
+        '-n', '--nteams',
         type=int,
         nargs="+",
         default=DEFAULT_CONFIG.nteams_values,
         help="List of nTeams values to test",
     )
     parser.add_argument(
-        "--timeout",
+        '-t', '--timeout',
         type=int,
         default=DEFAULT_CONFIG.timeout_s,
         help="Timeout in seconds (default: 300)",
     )
     parser.add_argument(
-        "--sym_break",
+        '-sym', '--sym_break',
         type=lambda x: x.lower() in ("true", "1", "yes", "t"),
         nargs="+",
         default=DEFAULT_CONFIG.sym_break,
         help="Whether to use symmetry breaking",
     )
     parser.add_argument(
-        "--solvers",
+        '-s', '--solvers',
         type=str,
         nargs="+",
         default=["cbc"],
         help="List of MIP solvers to use: cbc, highs, scip",
     )
     parser.add_argument(
-        "--output-dir",
+        '-o', '--output-dir',
         type=str,
         default="res/MIP",
         help="Output directory for results (default: res/MIP)",
