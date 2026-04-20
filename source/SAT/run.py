@@ -254,13 +254,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run SAT tournament scheduling experiments"
     )
-    parser.add_argument("--nteams",     type=int,  nargs="+", default=DEFAULT_CONFIG.nteams_values)
-    parser.add_argument("--timeout",    type=int,             default=DEFAULT_CONFIG.timeout_s)
-    parser.add_argument("--sym_break",  type=lambda x: x.lower() == "true", nargs="+",
+    parser.add_argument('-n', '--nteams',     type=int,  nargs="+", default=DEFAULT_CONFIG.nteams_values)
+    parser.add_argument('-t', '--timeout',    type=int,             default=DEFAULT_CONFIG.timeout_s)
+    parser.add_argument('-sym', '--sym_break',  type=lambda x: x.lower() == "true", nargs="+",
                         default=DEFAULT_CONFIG.sym_break)
-    parser.add_argument("--solvers",    type=str,  nargs="+", default=DEFAULT_CONFIG.solvers,
+    parser.add_argument('-s', '--solvers',    type=str,  nargs="+", default=DEFAULT_CONFIG.solvers,
                         choices=AVAILABLE_SOLVERS)
-    parser.add_argument("--output-dir", type=str,             default="res/SAT")
+    parser.add_argument('-o', '--output-dir', type=str,             default="res/SAT")
     parser.add_argument("--z3-only",    action="store_true")
     parser.add_argument("--pysat-only", action="store_true")
 

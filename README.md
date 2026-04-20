@@ -75,7 +75,7 @@ Results are written to `res/<PARADIGM>/<n_teams>.json` on your local machine.
 | `-m`, `--models` | Models to use: decision, optimized, or both. If omitted, uses paradigm defaults |
 | `-t`, `--timeout` | Timeout per run in seconds. If omitted, uses paradigm defaults |
 | `-sym`, `--sym_break` | Symmetry breaking: True, False, or both. If omitted, uses paradigm defaults |
-| `-o`, `--output_dir` | Base output directory (default: res/) |
+| `-o`, `--output-dir` | Base output directory (default: res/) |
 
 ## Examples
 - Run everything with each paradigm's own defaults:
