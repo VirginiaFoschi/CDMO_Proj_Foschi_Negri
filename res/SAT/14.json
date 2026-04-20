@@ -84,7 +84,7 @@
     ]
   },
   "glucose4_optimized_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -98,7 +98,7 @@
     ]
   },
   "glucose4_optimized": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -140,7 +140,7 @@
     ]
   },
   "minisat22_optimized_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [

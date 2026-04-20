@@ -26,7 +26,7 @@ def circle_method(n_teams: int) -> Tuple[List[List[int]], List[List[int]], List[
     for w in range(1, n_weeks + 1):
         week_a = []
         week_b = []
-        w_idx  = n_weeks - w
+        w_idx  = w - 1
 
         for k in range(1, n_periods + 1):
             if k == 1:

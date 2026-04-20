@@ -68,15 +68,16 @@ def solve_sat_z3_optimize(
             base_clauses.append(x[0][k][k])
         base_clauses.append(h[0][0])
 
-    def save_checkpoint(period_sol, obj):
+    def save_checkpoint(period_sol, obj, h_vals):
         if checkpoint_file:
             with open(checkpoint_file, 'w') as f:
-                json.dump({"period_sol": period_sol, "obj": obj}, f)
+                json.dump({"period_sol": period_sol, "obj": obj, "h_vals": h_vals}, f)
 
     deadline = _time.time() + timeout_s
     low  = 1
     high = n_weeks
     best_period_sol = None
+    best_h_vals     = None
     best_obj        = None
     found_any       = False
 
@@ -108,6 +109,11 @@ def solve_sat_z3_optimize(
                  for kk in range(n_periods)]
                 for w in range(n_weeks)
             ]
+            # h[w][k] = True iff base_a[w][k] is home
+            h_vals = [
+                [is_true(m.evaluate(h[w][kk])) for kk in range(n_periods)]
+                for w in range(n_weeks)
+            ]
             home_counts = [
                 sum(1 for w in range(n_weeks) if is_true(m.evaluate(hi[t][w])))
                 for t in range(n_teams)
@@ -115,15 +121,16 @@ def solve_sat_z3_optimize(
             actual_obj = max(abs(2 * hc - n_weeks) for hc in home_counts)
 
             best_period_sol = period_sol
+            best_h_vals     = h_vals
             best_obj        = actual_obj
             found_any       = True
-            save_checkpoint(period_sol, actual_obj)
+            save_checkpoint(period_sol, actual_obj, h_vals)
             high = k - 1
         else:
             low = k + 1
 
     if found_any:
         optimal = (low > high)
-        return optimal, best_period_sol, best_obj
+        return optimal, best_period_sol, best_h_vals, best_obj
     else:
-        return False, [], None
+        return False, [], None, None

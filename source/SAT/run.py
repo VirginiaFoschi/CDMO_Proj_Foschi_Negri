@@ -89,13 +89,13 @@ def _run_pysat_decision(nTeams, symmetry_breaking, time_limit_s, solver_name):
 
 def _run_pysat_optimized(nTeams, symmetry_breaking, time_limit_s, solver_name, checkpoint_file):
     base_a, base_b, team_match_idx = circle_method(nTeams)
-    solved, period_sol, obj = solve_sat_optimize(
+    solved, period_sol, home_sol, obj = solve_sat_optimize(
         n_teams=nTeams, timeout_s=time_limit_s, symm_break=symmetry_breaking,
         solver_name=solver_name,
         base_a=base_a, base_b=base_b, team_match_idx=team_match_idx,
         checkpoint_file=checkpoint_file,
     )
-    return solved, period_sol, obj, base_a, base_b, None
+    return solved, period_sol, obj, base_a, base_b, home_sol
 
 
 def _run_z3_decision(nTeams, symmetry_breaking, time_limit_s):
@@ -109,12 +109,12 @@ def _run_z3_decision(nTeams, symmetry_breaking, time_limit_s):
 
 def _run_z3_optimized(nTeams, symmetry_breaking, time_limit_s, checkpoint_file):
     base_a, base_b, team_match_idx = circle_method(nTeams)
-    solved, period_sol, obj = solve_sat_z3_optimize(
+    solved, period_sol, home_sol, obj = solve_sat_z3_optimize(
         n_teams=nTeams, timeout_s=time_limit_s, symm_break=symmetry_breaking,
         base_a=base_a, base_b=base_b, team_match_idx=team_match_idx,
         checkpoint_file=checkpoint_file,
     )
-    return solved, period_sol, obj, base_a, base_b, None
+    return solved, period_sol, obj, base_a, base_b, home_sol
 
 
 # ---------------------------------------------------------------------------
@@ -159,6 +159,7 @@ def solve_sts(
 
         # Try to recover best solution from checkpoint
         best_period_sol = None
+        best_home_sol   = None
         best_obj        = None
         if checkpoint_file and os.path.exists(checkpoint_file):
             try:
@@ -166,6 +167,7 @@ def solve_sts(
                     ckpt = json.load(f)
                 best_period_sol = ckpt.get("period_sol")
                 best_obj        = ckpt.get("obj")
+                best_home_sol   = ckpt.get("h_vals")
             except Exception:
                 pass
             os.unlink(checkpoint_file)
@@ -175,7 +177,7 @@ def solve_sts(
                 "time":    time_limit_s,
                 "optimal": False,
                 "obj":     best_obj,
-                "sol":     parse_solution(best_period_sol, base_a, base_b, None),
+                "sol":     parse_solution(best_period_sol, base_a, base_b, best_home_sol),
             }
         else:
             return {

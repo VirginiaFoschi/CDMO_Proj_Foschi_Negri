@@ -14,7 +14,7 @@ SOLVERS = {
     "CP":  ["gecode",  "chuffed"],
     "SAT": ["glucose4", "cadical195", "minisat22"],
     "SMT": ["z3"], 
-    "MIP": ["cbc", "highs", "glpk"], 
+    "MIP": ["highs", "cbc"],
 }
 
 MODEL_TYPES = {
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
 
 # Examples: (uses the default values in paradigm's run.py for everything not explicitly set here)
-# python run_all.py --p CP MIP --s gecode cbc --n 6 8 --sym True
+# python run_all.py --p CP MIP --s gecode highs --n 6 8 --sym True
 # python run_all.py --p all --s all --n 6 8 --sym both
 # python run_all.py --p all
 # python run_all.py --p CP

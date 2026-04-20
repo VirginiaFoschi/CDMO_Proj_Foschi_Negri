@@ -1,4 +1,3 @@
-from html import parser
 import math
 import time
 import argparse
@@ -17,7 +16,7 @@ def solve_sts(
     model: ModelConfig,
     symmetry_breaking: bool = True,
     time_limit_s: int = 300,
-    solver_type: str = "cbc",
+    solver_type: str = "highs",
     solver_verbose: bool = False,
 ):
     """
@@ -40,7 +39,7 @@ def solve_sts(
     base_a, base_b, team_match_idx = circle_method(nTeams)
 
     if model.opt:
-        solved, solution, obj_value = solve_mip_optimize(
+        solved, solution, h_vals, obj_value = solve_mip_optimize(
             n_teams=nTeams,
             timeout_s=time_limit_s,
             symm_break=symmetry_breaking,
@@ -51,7 +50,7 @@ def solve_sts(
             solver_verbose=solver_verbose,
         )
     else:
-        solved, solution, obj_value = solve_mip(
+        solved, solution, h_vals, obj_value = solve_mip(
             n_teams=nTeams,
             timeout_s=time_limit_s,
             symm_break=symmetry_breaking,
@@ -68,7 +67,7 @@ def solve_sts(
     result_dict["time"] = min(math.floor(total_time), time_limit_s)
     result_dict["obj"] = obj_value
     result_dict["optimal"] = solved
-    result_dict["sol"] = parse_solution(solution, base_a, base_b) if solved else []
+    result_dict["sol"] = parse_solution(solution, base_a, base_b, h_vals) if solution else []
 
     return result_dict
 
@@ -104,14 +103,18 @@ def run_experiments(
                     if sym:
                         key += "_symbreak"
 
-                    result = solve_sts(
-                        nTeams=n_teams,
-                        model=model,
-                        symmetry_breaking=sym,
-                        time_limit_s=timeout_s,
-                        solver_type=solver_type,
-                        solver_verbose=solver_verbose,
-                    )
+                    try:
+                        result = solve_sts(
+                            nTeams=n_teams,
+                            model=model,
+                            symmetry_breaking=sym,
+                            time_limit_s=timeout_s,
+                            solver_type=solver_type,
+                            solver_verbose=solver_verbose,
+                        )
+                    except Exception as e:
+                        print(f"  [SKIP] {key}: solver not available ({e})")
+                        continue
 
                     current_results[key] = result
 
@@ -152,8 +155,8 @@ def main():
         "--solvers",
         type=str,
         nargs="+",
-        default=["cbc"],
-        help="List of MIP solvers to use: cbc, highs, scip",
+        default=["highs"],
+        help="List of MIP solvers to use: highs, cbc",
     )
     parser.add_argument(
         "--output-dir",
@@ -166,12 +169,23 @@ def main():
         action="store_true",
         help="Enable solver logs",
     )
+    parser.add_argument(
+        "--only-optimized",
+        action="store_true",
+        help="Run only the optimized model (skip the decision/feasibility model)",
+    )
 
     args = parser.parse_args()
 
+    models = (
+        [m for m in DEFAULT_CONFIG.models if m.opt]
+        if args.only_optimized
+        else DEFAULT_CONFIG.models
+    )
+
     run_experiments(
         nteams_values=args.nteams,
-        models=DEFAULT_CONFIG.models,
+        models=models,
         timeout_s=args.timeout,
         sym_break=args.sym_break,
         solver_types=args.solvers,

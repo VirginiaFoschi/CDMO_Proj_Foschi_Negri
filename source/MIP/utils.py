@@ -6,7 +6,8 @@ import json
 def parse_solution(
     result,
     base_a: List[List[int]],
-    base_b: List[List[int]]
+    base_b: List[List[int]],
+    h_vals: Optional[dict] = None,
 ) -> Optional[List[List[List[int]]]]:
     if result == []:
         return None
@@ -26,10 +27,15 @@ def parse_solution(
         for w in range(n_weeks):
             for k in range(n_periods):
                 period = match_period[w][k] - 1
-                team_a = base_a[w][k] + 1
-                team_b = base_b[w][k] + 1
+                # h[w,k] = 1 → base_a is home; 0 → base_b is home
+                if h_vals is not None and h_vals.get((w, k), 1) == 0:
+                    home = base_b[w][k] + 1
+                    away = base_a[w][k] + 1
+                else:
+                    home = base_a[w][k] + 1
+                    away = base_b[w][k] + 1
 
-                schedule[period][w] = [team_a, team_b]
+                schedule[period][w] = [home, away]
 
         return schedule
 

@@ -15,7 +15,7 @@
     ]
   },
   "glucose4_decision": {
-    "time": 10,
+    "time": 8,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -30,7 +30,7 @@
     ]
   },
   "cadical195_decision_symbreak": {
-    "time": 5,
+    "time": 4,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -60,7 +60,7 @@
     ]
   },
   "minisat22_decision_symbreak": {
-    "time": 2,
+    "time": 1,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -75,7 +75,7 @@
     ]
   },
   "minisat22_decision": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -90,7 +90,7 @@
     ]
   },
   "glucose4_optimized_symbreak": {
-    "time": 166,
+    "time": 127,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -105,7 +105,7 @@
     ]
   },
   "glucose4_optimized": {
-    "time": 86,
+    "time": 65,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -120,7 +120,7 @@
     ]
   },
   "cadical195_optimized_symbreak": {
-    "time": 15,
+    "time": 12,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -135,7 +135,7 @@
     ]
   },
   "cadical195_optimized": {
-    "time": 8,
+    "time": 7,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -150,7 +150,7 @@
     ]
   },
   "minisat22_optimized_symbreak": {
-    "time": 21,
+    "time": 16,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -165,7 +165,7 @@
     ]
   },
   "minisat22_optimized": {
-    "time": 7,
+    "time": 5,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -180,7 +180,7 @@
     ]
   },
   "z3_decision_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -210,7 +210,7 @@
     ]
   },
   "z3_optimized_symbreak": {
-    "time": 5,
+    "time": 4,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -225,7 +225,7 @@
     ]
   },
   "z3_optimized": {
-    "time": 4,
+    "time": 3,
     "optimal": true,
     "obj": 1,
     "sol": [

@@ -1,6 +1,4 @@
 import math
-
-import minizinc
 import sys
 import time
 import datetime

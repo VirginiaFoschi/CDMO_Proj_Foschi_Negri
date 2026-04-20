@@ -1,6 +1,6 @@
 {
   "glucose4_decision_symbreak": {
-    "time": 288,
+    "time": 210,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -22,7 +22,7 @@
     "sol": []
   },
   "cadical195_decision_symbreak": {
-    "time": 8,
+    "time": 7,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -38,7 +38,7 @@
     ]
   },
   "cadical195_decision": {
-    "time": 24,
+    "time": 19,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -54,7 +54,7 @@
     ]
   },
   "minisat22_decision_symbreak": {
-    "time": 8,
+    "time": 6,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -70,7 +70,7 @@
     ]
   },
   "minisat22_decision": {
-    "time": 2,
+    "time": 1,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -108,7 +108,7 @@
     "sol": []
   },
   "cadical195_optimized_symbreak": {
-    "time": 36,
+    "time": 30,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -124,7 +124,7 @@
     ]
   },
   "cadical195_optimized": {
-    "time": 21,
+    "time": 18,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -140,7 +140,7 @@
     ]
   },
   "minisat22_optimized_symbreak": {
-    "time": 83,
+    "time": 68,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -156,7 +156,7 @@
     ]
   },
   "minisat22_optimized": {
-    "time": 92,
+    "time": 76,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -172,7 +172,7 @@
     ]
   },
   "z3_decision_symbreak": {
-    "time": 8,
+    "time": 7,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -188,7 +188,7 @@
     ]
   },
   "z3_decision": {
-    "time": 17,
+    "time": 15,
     "optimal": true,
     "obj": null,
     "sol": [
@@ -204,7 +204,7 @@
     ]
   },
   "z3_optimized_symbreak": {
-    "time": 40,
+    "time": 35,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -220,7 +220,7 @@
     ]
   },
   "z3_optimized": {
-    "time": 27,
+    "time": 23,
     "optimal": true,
     "obj": 1,
     "sol": [
