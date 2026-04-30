@@ -79,7 +79,7 @@ def save_results(results: Dict[str, Any], output_path: Path):
         block = f'  "{solver_name}": {{\n'
         block += f'    "time": {solver_data["time"]},\n'
         block += f'    "optimal": {str(solver_data["optimal"]).lower()},\n'
-        block += f'    "obj": {json.dumps(solver_data["obj"])},\n'
+        block += f'    "obj": {json.dumps("None" if solver_data["obj"] is None else solver_data["obj"])},\n'
         block += f'    "sol": {format_sol(solver_data["sol"])}\n'
         block += "  }"
         solver_blocks.append(block)

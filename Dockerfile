@@ -13,6 +13,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     libffi-dev \
     coinor-cbc \
+    libgl1 \
+    libegl1 \
+    libfontconfig1 \
+    libfreetype6 \
+    libgpg-error0 \
  && rm -rf /var/lib/apt/lists/*
 
 # --- Install MiniZinc System Binary ---

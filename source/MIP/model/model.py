@@ -29,9 +29,11 @@ def _solve(model, solver_name: str, timeout_s: int, verbose: bool):
 
     sf = SolverFactory(sf_name)
     sf.options[_TIMEOUT_OPT[sf_name]] = timeout_s
+    sf.options["threads"] = 1
     if sf_name == "appsi_highs":
         try:
             sf.config.time_limit = float(timeout_s)
+            sf.config.threads = 1
         except Exception:
             pass
 

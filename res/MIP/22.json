@@ -2,49 +2,25 @@
   "mip_highs": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "mip_highs_symbreak": {
     "time": 300,
     "optimal": false,
-    "obj": null,
-    "sol": []
-  },
-  "mip_cbc": {
-    "time": 300,
-    "optimal": false,
-    "obj": null,
-    "sol": []
-  },
-  "mip_cbc_symbreak": {
-    "time": 300,
-    "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "mip_highs_optimized": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "mip_highs_optimized_symbreak": {
     "time": 300,
     "optimal": false,
-    "obj": null,
-    "sol": []
-  },
-  "mip_cbc_optimized": {
-    "time": 300,
-    "optimal": false,
-    "obj": null,
-    "sol": []
-  },
-  "mip_cbc_optimized_symbreak": {
-    "time": 300,
-    "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   }
 }

@@ -2,19 +2,19 @@
   "gecode": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "gecode_symbreak": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "chuffed": {
-    "time": 3,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[12,9],[18,5],[15,10],[2,8],[4,8],[4,10],[7,9],[7,11],[6,14],[3,2],[11,13],[6,3],[12,16],[14,16],[15,17],[1,17],[1,18]],
       [[11,10],[2,4],[18,7],[17,10],[3,9],[5,9],[5,11],[6,12],[7,13],[8,14],[4,3],[12,14],[13,15],[1,15],[1,16],[16,18],[17,2]],
@@ -28,9 +28,9 @@
     ]
   },
   "chuffed_symbreak": {
-    "time": 2,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[1,2],[16,7],[13,12],[4,6],[15,14],[5,9],[5,11],[8,10],[6,14],[10,12],[4,3],[7,2],[8,3],[13,17],[15,17],[16,18],[1,18]],
       [[18,3],[15,8],[18,7],[15,12],[2,10],[3,11],[7,9],[4,14],[8,12],[9,13],[11,13],[5,4],[6,5],[14,16],[1,16],[1,17],[17,2]],
@@ -46,49 +46,49 @@
   "gecode_optimized": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "gecode_optimized_symbreak": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "chuffed_optimized": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "chuffed_optimized_symbreak": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "gecode_optimized_dwd_luby": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "gecode_optimized_dwd_luby_symbreak": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "chuffed_optimized_dwd_luby": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   },
   "chuffed_optimized_dwd_luby_symbreak": {
     "time": 300,
     "optimal": false,
-    "obj": null,
+    "obj": "None",
     "sol": []
   }
 }

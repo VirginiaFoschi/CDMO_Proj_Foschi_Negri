@@ -1,8 +1,8 @@
 {
   "gecode": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[1,2],[8,5],[2,6],[3,7],[1,6],[4,3],[5,4]],
       [[8,3],[7,6],[1,4],[2,8],[5,7],[5,2],[6,3]],
@@ -11,9 +11,9 @@
     ]
   },
   "gecode_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[1,2],[8,5],[2,6],[3,7],[1,6],[4,3],[5,4]],
       [[8,3],[7,6],[1,4],[2,8],[5,7],[5,2],[6,3]],
@@ -22,9 +22,9 @@
     ]
   },
   "chuffed": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[8,3],[2,4],[2,6],[4,6],[5,7],[1,7],[1,8]],
       [[6,5],[8,5],[1,4],[3,7],[3,2],[6,8],[7,2]],
@@ -33,9 +33,9 @@
     ]
   },
   "chuffed_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[1,2],[7,6],[3,5],[4,6],[5,7],[4,3],[1,8]],
       [[8,3],[8,5],[1,4],[3,7],[1,6],[5,2],[7,2]],
@@ -44,7 +44,7 @@
     ]
   },
   "gecode_optimized": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -55,7 +55,7 @@
     ]
   },
   "gecode_optimized_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -66,7 +66,7 @@
     ]
   },
   "chuffed_optimized": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -77,7 +77,7 @@
     ]
   },
   "chuffed_optimized_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -88,7 +88,7 @@
     ]
   },
   "gecode_optimized_dwd_luby": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -99,7 +99,7 @@
     ]
   },
   "gecode_optimized_dwd_luby_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -110,7 +110,7 @@
     ]
   },
   "chuffed_optimized_dwd_luby": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -121,7 +121,7 @@
     ]
   },
   "chuffed_optimized_dwd_luby_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [

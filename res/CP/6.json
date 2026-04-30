@@ -1,8 +1,8 @@
 {
   "gecode": {
-    "time": 3,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[1,2],[6,5],[1,4],[3,2],[4,3]],
       [[5,4],[1,3],[2,6],[4,6],[5,2]],
@@ -10,9 +10,9 @@
     ]
   },
   "gecode_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[1,2],[6,5],[3,5],[4,6],[4,3]],
       [[6,3],[2,4],[1,4],[1,5],[5,2]],
@@ -20,9 +20,9 @@
     ]
   },
   "chuffed": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[6,3],[2,4],[3,5],[1,5],[1,6]],
       [[5,4],[1,3],[2,6],[4,6],[5,2]],
@@ -30,9 +30,9 @@
     ]
   },
   "chuffed_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
-    "obj": null,
+    "obj": "None",
     "sol": [
       [[1,2],[2,4],[3,5],[4,6],[1,6]],
       [[6,3],[6,5],[1,4],[3,2],[5,2]],
@@ -40,7 +40,7 @@
     ]
   },
   "gecode_optimized": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -50,7 +50,7 @@
     ]
   },
   "gecode_optimized_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -60,7 +60,7 @@
     ]
   },
   "chuffed_optimized": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -70,7 +70,7 @@
     ]
   },
   "chuffed_optimized_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -80,7 +80,7 @@
     ]
   },
   "gecode_optimized_dwd_luby": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -90,7 +90,7 @@
     ]
   },
   "gecode_optimized_dwd_luby_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -100,7 +100,7 @@
     ]
   },
   "chuffed_optimized_dwd_luby": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
@@ -110,7 +110,7 @@
     ]
   },
   "chuffed_optimized_dwd_luby_symbreak": {
-    "time": 1,
+    "time": 0,
     "optimal": true,
     "obj": 1,
     "sol": [
