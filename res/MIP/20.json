@@ -1,6 +1,6 @@
 {
   "mip_highs": {
-    "time": 189,
+    "time": 185,
     "optimal": true,
     "obj": "None",
     "sol": [
@@ -17,7 +17,7 @@
     ]
   },
   "mip_highs_symbreak": {
-    "time": 157,
+    "time": 152,
     "optimal": true,
     "obj": "None",
     "sol": [
@@ -33,13 +33,37 @@
       [[12,11],[18,7],[14,13],[1,5],[4,8],[4,10],[20,15],[2,16],[2,18],[3,19],[10,14],[9,17],[6,3],[13,17],[7,6],[15,19],[12,5],[11,8],[1,20]]
     ]
   },
+  "mip_cbc": {
+    "time": 300,
+    "optimal": false,
+    "obj": "None",
+    "sol": []
+  },
+  "mip_cbc_symbreak": {
+    "time": 300,
+    "optimal": false,
+    "obj": "None",
+    "sol": []
+  },
   "mip_highs_optimized": {
-    "time": 33,
+    "time": 74,
     "optimal": false,
     "obj": "None",
     "sol": []
   },
   "mip_highs_optimized_symbreak": {
+    "time": 300,
+    "optimal": false,
+    "obj": "None",
+    "sol": []
+  },
+  "mip_cbc_optimized": {
+    "time": 300,
+    "optimal": false,
+    "obj": "None",
+    "sol": []
+  },
+  "mip_cbc_optimized_symbreak": {
     "time": 300,
     "optimal": false,
     "obj": "None",

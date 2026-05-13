@@ -11,6 +11,18 @@
     "obj": "None",
     "sol": []
   },
+  "mip_cbc": {
+    "time": 300,
+    "optimal": false,
+    "obj": "None",
+    "sol": []
+  },
+  "mip_cbc_symbreak": {
+    "time": 300,
+    "optimal": false,
+    "obj": "None",
+    "sol": []
+  },
   "mip_highs_optimized": {
     "time": 300,
     "optimal": false,
@@ -18,6 +30,18 @@
     "sol": []
   },
   "mip_highs_optimized_symbreak": {
+    "time": 300,
+    "optimal": false,
+    "obj": "None",
+    "sol": []
+  },
+  "mip_cbc_optimized": {
+    "time": 300,
+    "optimal": false,
+    "obj": "None",
+    "sol": []
+  },
+  "mip_cbc_optimized_symbreak": {
     "time": 300,
     "optimal": false,
     "obj": "None",

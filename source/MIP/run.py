@@ -155,7 +155,7 @@ def main():
         '-s', '--solvers',
         type=str,
         nargs="+",
-        default=["highs"],
+        default=["highs", "cbc"],
         help="List of MIP solvers to use: highs, cbc",
     )
     parser.add_argument(
@@ -170,18 +170,20 @@ def main():
         help="Enable solver logs",
     )
     parser.add_argument(
-        "--only-optimized",
-        action="store_true",
-        help="Run only the optimized model (skip the decision/feasibility model)",
+        '-m', '--models',
+        type=str,
+        nargs='+',
+        default=['decision', 'optimized'],
+        help='Model types to run: decision, optimized (default: both)',
     )
 
     args = parser.parse_args()
 
-    models = (
-        [m for m in DEFAULT_CONFIG.models if m.opt]
-        if args.only_optimized
-        else DEFAULT_CONFIG.models
-    )
+    models = [
+        m for m in DEFAULT_CONFIG.models
+        if ('decision' in args.models and not m.opt)
+        or ('optimized' in args.models and m.opt)
+    ]
 
     run_experiments(
         nteams_values=args.nteams,

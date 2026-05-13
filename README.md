@@ -48,14 +48,14 @@ docker build -t sts-img .
 - **Option A — Run directly**
 
   ```bash
-  docker run --rm -v ${PWD}:/app -w /app sts-img python run_all.py [OPTIONS]
+  docker run --rm -v ${PWD}/res:/app/res sts-img python run_all.py [OPTIONS]
   ```
 
 - **Option B — Enter the container first and then run**
 
   ```bash
   # Open a shell inside the container
-  docker run -it --rm -v ${PWD}:/app -w /app --entrypoint bash sts-img
+  docker run -it --rm -v ${PWD}/res:/app/res --entrypoint bash sts-img
   ```
 
   Then run:
@@ -80,23 +80,23 @@ Results are written to `res/<PARADIGM>/<n_teams>.json` on your local machine.
 ## Examples
 - Run everything with each paradigm's own defaults:
   ```bash
-  python run_all.py --p all
+  python run_all.py -p all
   ```
 - Run only CP and MIP on small instances:
   ```bash
-  python run_all.py --p CP MIP --n 6 8 10
+  python run_all.py -p CP MIP -n 6 8 10
   ```
 - Run all paradigms with all their valid solvers, both with and without symmetry breaking:
   ```bash
-  python run_all.py --p all --s all --sym both
+  python run_all.py -p all -s all -sym True False
   ```
 - Run only the optimization model with a custom timeout:
   ```bash
-  python run_all.py --m optimized --t 120
+  python run_all.py -m optimized -t 120
   ```
 
 ### 4. Run a Single Paradigm
 Each paradigm can also be run individually:
 ```bash
-python source/CP/run.py --n 6 8 --t 120
+python source/CP/run.py -n 6 8 -t 120
 ```

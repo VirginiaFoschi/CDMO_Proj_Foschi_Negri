@@ -263,6 +263,13 @@ def main() -> None:
     parser.add_argument('-o', '--output-dir', type=str,             default="res/SAT")
     parser.add_argument("--z3-only",    action="store_true")
     parser.add_argument("--pysat-only", action="store_true")
+    parser.add_argument(
+        '-m', '--models',
+        type=str,
+        nargs='+',
+        default=None,
+        help='Model types to run: decision, optimized (default: both)',
+    )
 
     args = parser.parse_args()
 
@@ -271,6 +278,11 @@ def main() -> None:
         models = [m for m in models if m.z3]
     elif args.pysat_only:
         models = [m for m in models if not m.z3]
+
+    if args.models is not None:
+        want_dec = 'decision' in args.models
+        want_opt = 'optimized' in args.models
+        models = [m for m in models if (not m.opt and want_dec) or (m.opt and want_opt)]
 
     run_experiments(
         nteams_values=args.nteams,
