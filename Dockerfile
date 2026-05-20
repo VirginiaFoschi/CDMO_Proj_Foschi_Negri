@@ -38,7 +38,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --timeout=200 -r requirements.txt
 
 # Smoke-test: SAT solvers
 RUN python -c "\

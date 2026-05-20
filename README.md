@@ -33,7 +33,7 @@ An optimization variant is also implemented, minimizing the imbalance between ho
 All experiments run inside Docker to guarantee full reproducibility.
 ### 1. Install Docker:
    
-Download and install Docker Desktop from https://www.docker.com/get-started.
+Download, install and start Docker Desktop from https://www.docker.com/get-started.
 
 No other dependencies are required — all solvers and packages are installed inside the container.
 
