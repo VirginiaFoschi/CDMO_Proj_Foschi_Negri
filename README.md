@@ -44,6 +44,7 @@ From the project root, build the image:
 docker build -t sts-img .
 ```
 ### 3. Run Experiments
+The available values for `[OPTIONS]` are listed in the table below.
 
 - **Option A — Run directly**
 
@@ -77,7 +78,7 @@ Results are written to `res/<PARADIGM>/<n_teams>.json` on your local machine.
 | `-sym`, `--sym_break` | Symmetry breaking: True, False, or both. If omitted, uses paradigm defaults |
 | `-o`, `--output-dir` | Base output directory (default: res/) |
 
-## Examples
+### Examples
 - Run everything with each paradigm's own defaults:
   ```bash
   python run_all.py -p all
@@ -100,3 +101,14 @@ Each paradigm can also be run individually:
 ```bash
 python source/CP/run.py -n 6 8 -t 120
 ```
+
+## Check results
+To verify that the generated results are valid, run the provided
+`solution_checker.py` script by passing the folder containing the JSON
+result files to be checked.
+
+```bash
+python solution_checker.py <results_folder>
+```
+
+(where <results_folder> can be either `res/CP`, `res/SAT`, `res/SMT`, `res/MIP`)

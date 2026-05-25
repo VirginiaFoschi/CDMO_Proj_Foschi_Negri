@@ -20,7 +20,7 @@ def solve_smt_optimize(
     opt = Optimize()
     opt.set(timeout=timeout_s*1000)
 
-    # ---- Decision Variables ----
+    # Decision Variables:
     # match_period[w][k] is the period assigned to match k in week w
     match_period = [
         [Int(f"p_w{w}_k{k}") for k in range(n_periods)] 
@@ -41,7 +41,7 @@ def solve_smt_optimize(
             opt.add(match_period[w][k] >= 1)
             opt.add(match_period[w][k] <= n_periods)
 
-    # ----- Constraints ------
+    # Constraints:
 
     # 1) AllDifferent per Week: In any given week, you cannot have two matches happening in the exact same period
     # For every period 'p', exactly one match 'k' in this week uses it.
@@ -58,7 +58,7 @@ def solve_smt_optimize(
             opt.add(PbGe(occurrences, 1))  # at least once
             opt.add(PbLe(occurrences, 2))  # at most twice
 
-    # ---- Symmetry Breaking ----
+    # Symmetry Breaking Constraints:
     if symm_break:
         # Break Period Symmetry: first week periods are 1, 2, 3...
         for k in range(n_periods):
@@ -66,7 +66,7 @@ def solve_smt_optimize(
             # Fix the first match of first week to avoid Home/Away swap symmetry
             opt.add(swap[0][0] == False)  # team1[0][0] is home in week 0, match 0
 
-    ## --- Optimization -----
+    ## Optimization:
 
     # A single integer variable that will track the worst-case difference between home and away games across all team
     max_imbalance = Int('max_imbalance')
@@ -105,7 +105,7 @@ def solve_smt_optimize(
     # Minimize the maximum imbalance
     opt.minimize(max_imbalance)
 
-    # ---- Solve ----
+    # Solve:
     result = opt.check()
     if result == sat:
         m = opt.model()

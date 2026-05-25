@@ -1,7 +1,5 @@
 include "globals.mzn";
 
-% --- Parameters ---
-
 int: nTeams;
 constraint nTeams mod 2 = 0;
 
@@ -19,7 +17,7 @@ array[Weeks, 1..nPeriods] of int: team2;
 bool: sym_break;
 
 
-% --- PRECOMPUTATION ---
+% PRECOMPUTATION:
 
 % teamMatch[t,w] = match index k involving team t in week w
 array[Teams, Weeks] of 1..nPeriods: teamMatch =
@@ -30,7 +28,7 @@ array[Teams, Weeks] of 1..nPeriods: teamMatch =
     ]);
 
 
-% --- DECISION VARIABLES ---
+% DECISION VARIABLES:
 
 array[Weeks, 1..nPeriods] of var Periods: matchPeriod;
 % swap[w,k] = 0 -> team1 is home, team2 is away
@@ -39,7 +37,7 @@ array[Weeks, 1..nPeriods] of var Periods: matchPeriod;
 array[Weeks, 1..nPeriods] of var 0..1: swap;
 
 
-% --- PERIOD ASSIGNMENT CONSTRAINTS ---
+% CONSTRAINTS:
 
 % C1: each week is a permutation of periods
 constraint forall(w in Weeks)(
@@ -57,7 +55,7 @@ constraint forall(t in Teams)(
 );
 
 
-% --- SYMMETRY BREAKING ---
+% SYMMETRY BREAKING CONSTRAINTS:
 
 % Period-label symmetry
 constraint sym_break ->
@@ -67,7 +65,7 @@ constraint sym_break ->
 constraint sym_break -> swap[1,1] = 0;
 
 
-% --- OBJECTIVE WITH BOUNDS ---
+% OBJECTIVE:
 
 array[Teams] of var 0..nWeeks: homeCount;
 
@@ -97,6 +95,6 @@ var L..U: maxImbalance = max(t in Teams)(abs(2*homeCount[t] - nWeeks));
 
 constraint maxImbalance mod 2 = 1;
 
-% --- SOLVE ---
+% SOLVE:
 
 solve minimize maxImbalance;

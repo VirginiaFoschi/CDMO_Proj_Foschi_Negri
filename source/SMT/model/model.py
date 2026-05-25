@@ -19,7 +19,7 @@ def solve_smt(
     s = Then('card2bv','smt').solver()
     s.set(timeout=timeout_s*1000)
 
-    # ---- Decision Variables ----
+    # Decision Variables:
     # match_period[w][k] is the period assigned to match k in week w
     match_period = [
         [Int(f"p_w{w}_k{k}") for k in range(n_periods)] 
@@ -32,7 +32,7 @@ def solve_smt(
             s.add(match_period[w][k] >= 1)
             s.add(match_period[w][k] <= n_periods)
 
-    # ----- Constraints ------
+    # Constraints:
 
     # 1) AllDifferent per Week: In any given week, you cannot have two matches happening in the exact same period
     # For every period 'p', exactly one match 'k' in this week uses it.
@@ -52,13 +52,13 @@ def solve_smt(
             s.add(PbLe(occurrences, 2))  # at most twice
 
 
-    # ---- Symmetry Breaking ----
+    # Symmetry Breaking Constraints:
     if symm_break:
         # Break Period Symmetry: first week periods are 1, 2, 3...
         for k in range(n_periods):
             s.add(match_period[0][k] == k + 1)
 
-    # --- Solve -----
+    # Solve:
     result = s.check()
     if result == sat:
         m = s.model()

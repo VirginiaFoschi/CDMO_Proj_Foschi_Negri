@@ -24,11 +24,11 @@ array[Teams, Weeks] of 1..nPeriods: teamMatch =
         ) | t in Teams, w in Weeks
     ]);
 
-% --- Decision Variables ---
+% Decision Variables:
 % for each week w and each game-slot k, matchPeriod[w,k] is the period to which that game is assigned
 array[Weeks, 1..nPeriods] of var Periods: matchPeriod;
 
-% --- Constraints ---
+% Constraints:
 
 % For each week, the period assignments of all game-slots must be all different->  Every period in every week has exactly one game
 constraint forall(w in Weeks)(
@@ -45,7 +45,7 @@ constraint forall(t in Teams)(
     )
 );
 
-% --- Symmetry breaking ---
+% Symmetry breaking constraints:
 
 % Breaks Period symmetry
 constraint sym_break ->
