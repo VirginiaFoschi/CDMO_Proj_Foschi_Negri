@@ -20,13 +20,11 @@ _TIMEOUT_OPT = {
     "cbc":         "seconds",
 }
 
-# Seconds to wait beyond solver's own time_limit before sending SIGKILL.
+# extra wait before SIGKILL
 _KILL_BUFFER = 30
 
 
-# ---------------------------------------------------------------------------
-# Solution extraction
-# ---------------------------------------------------------------------------
+# --- solution extraction ---
 
 def _extract_periods(model, n_weeks: int, n_periods: int) -> List[List[int]]:
     match_period_solution = []
@@ -51,7 +49,7 @@ def _extract_periods(model, n_weeks: int, n_periods: int) -> List[List[int]]:
 
 
 def _extract_home(model, n_weeks: int, n_periods: int) -> dict:
-    """Extract h[w,k] values: 1 means base_a is home, 0 means base_b is home."""
+    """Read h[w,k]: 1 = base_a home, 0 = base_b home."""
     h_vals = {}
     for w in range(n_weeks):
         for k in range(n_periods):
@@ -59,13 +57,13 @@ def _extract_home(model, n_weeks: int, n_periods: int) -> dict:
                 val = pyomo_value(model.h[w, k])
                 h_vals[(w, k)] = 1 if (val is not None and val > 0.5) else 0
             except Exception:
-                h_vals[(w, k)] = 1  # default: base_a is home
+                h_vals[(w, k)] = 1  # default
     return h_vals
 
 
 def _compute_actual_obj(h_vals: dict, base_a, base_b, team_match_idx,
                         n_teams: int, n_weeks: int) -> int:
-    """Compute the actual max imbalance from extracted h values."""
+    """Compute actual max imbalance from extracted h values."""
     home_counts = []
     for t in range(n_teams):
         hc = 0
@@ -81,25 +79,11 @@ def _compute_actual_obj(h_vals: dict, base_a, base_b, team_match_idx,
     return max(abs(2 * hc - n_weeks) for hc in home_counts)
 
 
-# ---------------------------------------------------------------------------
-# Model builder
-# ---------------------------------------------------------------------------
+# --- model builder ---
 
 def _build_model(n_teams: int, symm_break: bool,
                  base_a, team_match_idx) -> ConcreteModel:
-    """
-    Build the optimization MIP.
-
-    Minimizes max_imbalance = max_t |2*H[t] - (n-1)| directly,
-    using the standard min-max linearization:
-
-        max_imbalance >= 2*H[t] - (n-1)   for all t
-        max_imbalance >= -(2*H[t] - (n-1)) for all t
-        minimize max_imbalance
-
-    This lets the solver find incumbents early and improve them over time,
-    so a partial (non-optimal) solution is always available at timeout.
-    """
+    """Build the optimization MIP model."""
     n_weeks   = n_teams - 1
     n_periods = n_teams // 2
 
@@ -108,35 +92,30 @@ def _build_model(n_teams: int, symm_break: bool,
     model.K = RangeSet(0, n_periods - 1)
     model.P = RangeSet(1, n_periods)
 
-    # Period assignment variables
+    # --- variables ---
     model.x = Var(model.W, model.K, model.P, domain=Binary)
-    # Home/away variables: h[w,k]=1 means base_a is home
     model.h = Var(model.W, model.K, domain=Binary)
-    # Objective variable: max imbalance across all teams.
-    # Lower bound = 1: since n_weeks is odd and 2*H[t] is even,
-    # |2*H[t] - n_weeks| >= 1 always.
     model.max_imbalance = Var(domain=NonNegativeIntegers,
                               bounds=(1, n_weeks))
 
-    # Implied parity: 2*H[t] - n_weeks is always odd (even - odd),
-    # so max_imbalance must be odd. Encode as max_imbalance = 2*k_aux + 1.
+    # C4: parity — maxImbalance must be odd (n even → n-1 odd → imbalance always odd)
     model.k_aux = Var(domain=NonNegativeIntegers,
                       bounds=(0, (n_weeks - 1) // 2))
     model.parity_con = Constraint(expr=model.max_imbalance == 2 * model.k_aux + 1)
 
-    # --- Scheduling constraints ---
-
-    # Each match assigned to exactly one period per week
+    # --- scheduling constraints ---
+    # C1: each match assigned to exactly one period
     model.one_period = Constraint(
         model.W, model.K,
         rule=lambda m, w, k: sum(m.x[w, k, p] for p in m.P) == 1)
 
-    # Each period used by exactly one match per week
+    # C2: each period hosts exactly one match per week
     model.one_match_per_period = Constraint(
         model.W, model.P,
         rule=lambda m, w, p: sum(m.x[w, k, p] for k in m.K) == 1)
 
-    # Each team plays at most twice in the same period over the tournament
+    # C3: at most twice per period per team
+    # (>=1 is implied: n-1 games over n/2 periods with cap 2 leaves no room for a zero)
     model.max_twice = ConstraintList()
     for t in range(n_teams):
         for p in range(1, n_periods + 1):
@@ -144,16 +123,14 @@ def _build_model(n_teams: int, symm_break: bool,
                 sum(model.x[w, team_match_idx[t][w], p]
                     for w in range(n_weeks)) <= 2)
 
-    # --- Symmetry breaking ---
+    # --- symmetry breaking ---
     if symm_break:
         model.sb = ConstraintList()
         for k in range(n_periods):
             model.sb.add(model.x[0, k, k + 1] == 1)
         model.sb.add(model.h[0, 0] == 1)
 
-    # --- Min-max linearization for home/away balance ---
-    # H[t] = number of home games for team t
-    # max_imbalance >= |2*H[t] - n_weeks| for all t
+    # --- min-max linearization (objective encoding) ---
     model.imbalance_ub = ConstraintList()
     model.imbalance_lb = ConstraintList()
     for t in range(n_teams):
@@ -174,17 +151,12 @@ def _build_model(n_teams: int, symm_break: bool,
     return model
 
 
-# ---------------------------------------------------------------------------
-# Child-process worker
-# ---------------------------------------------------------------------------
+# --- child-process worker ---
 
 def _child_work(w_fd: int, n_teams: int, symm_break: bool,
                 base_a, base_b, team_match_idx,
                 sf_name: str, timeout_s: int, verbose: bool) -> None:
-    """
-    Build model, solve, extract solution and write result to pipe.
-    Called only in the forked child process; always ends with os._exit().
-    """
+    """Build, solve, and send result through pipe. Runs in child process."""
     try:
         n_weeks   = n_teams - 1
         n_periods = n_teams // 2
@@ -224,9 +196,7 @@ def _child_work(w_fd: int, n_teams: int, symm_break: bool,
     os._exit(0)
 
 
-# ---------------------------------------------------------------------------
-# Main solver function
-# ---------------------------------------------------------------------------
+# --- main solver function ---
 
 def solve_mip_optimize(
     n_teams: int,
@@ -238,15 +208,7 @@ def solve_mip_optimize(
     solver_type: str = "highs",
     solver_verbose: bool = False,
 ) -> Tuple[bool, List[List[int]], dict, Optional[int]]:
-    """
-    Optimization MIP model: min max_t |2*H[t] - (n-1)|
-
-    Runs the solver in a forked child process so it can be killed with
-    SIGKILL if it ignores its own time_limit (which appsi_highs sometimes
-    does for hard instances).
-
-    Returns (optimal, period_solution, h_vals, obj_value).
-    """
+    """Optimization MIP: minimize max home/away imbalance."""
     if n_teams % 2 != 0:
         raise ValueError("Number of teams must be even.")
     if base_a is None or base_b is None or team_match_idx is None:
@@ -261,13 +223,12 @@ def solve_mip_optimize(
     pid = os.fork()
 
     if pid == 0:
-        # ---- child ----
+        # child
         os.close(r_fd)
         _child_work(w_fd, n_teams, symm_break, base_a, base_b, team_match_idx,
                     sf_name, timeout_s, solver_verbose)
-        # _child_work always calls os._exit(); this line is never reached.
 
-    # ---- parent ----
+    # parent
     os.close(w_fd)
     deadline    = _time.time() + timeout_s + _KILL_BUFFER
     child_done  = False

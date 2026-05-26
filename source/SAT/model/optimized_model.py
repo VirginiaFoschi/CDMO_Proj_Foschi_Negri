@@ -18,11 +18,7 @@ def solve_sat_optimize(
     team_match_idx: List[List[int]] = None,
     checkpoint_file: str = None,
 ) -> Tuple[bool, List[List[int]], Optional[int]]:
-    """
-    Solve tournament scheduling (optimization version) with PySAT.
-    Binary search on max_diff. Best solution found is written to
-    checkpoint_file so the parent process can read it after a timeout.
-    """
+    """Optimization SAT: binary search on max imbalance bound."""
     n_weeks   = n_teams - 1
     n_periods = n_teams // 2
 
@@ -42,6 +38,7 @@ def solve_sat_optimize(
     hi_top = h_top + n_teams * n_weeks
     vpool_offset = hi_top + 1
 
+    # --- base CNF (period assignment + home/away consistency) ---
     base_cnf = CNF()
 
     for w in range(n_weeks):
@@ -83,6 +80,7 @@ def solve_sat_optimize(
                 base_cnf.append([-hi, -h])
                 base_cnf.append([ hi,  h])
 
+    # --- symmetry breaking ---
     if symm_break:
         for k in range(n_periods):
             base_cnf.append([var_x(0, k, k)])
@@ -93,6 +91,7 @@ def solve_sat_optimize(
             with open(checkpoint_file, 'w') as f:
                 json.dump({"period_sol": period_sol, "obj": obj, "h_vals": h_vals}, f)
 
+    # --- binary search ---
     deadline = _time.time() + timeout_s
     low  = 1
     high = n_weeks

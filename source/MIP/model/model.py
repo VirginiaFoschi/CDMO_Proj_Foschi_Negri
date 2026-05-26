@@ -21,7 +21,7 @@ _THREAD_TIMEOUT_BUFFER = 60
 
 
 def _solve(model, solver_name: str, timeout_s: int, verbose: bool):
-    """Two-layer timeout: solver-level + Python thread-level fallback."""
+    """Solver call with thread-level timeout fallback."""
     sf_name = _SOLVER_MAP.get(solver_name.lower())
     if sf_name is None:
         raise ValueError(
@@ -55,21 +55,18 @@ def _solve(model, solver_name: str, timeout_s: int, verbose: bool):
 
     result = result_box[0]
     tc = str(result.solver.termination_condition).lower()
-    # CBC reports status='aborted' when it hits the time limit with a
-    # feasible solution; treat it the same as maxtimelimit.
+    # CBC returns 'aborted' when it hits the time limit with a feasible solution
     has_solution = tc in ("optimal", "feasible", "maxtimelimit", "other",
                            "aborted")
     return result, has_solution
 
 
 def _extract_home(model, n_weeks: int, n_periods: int) -> dict:
-    """Extract h[w,k] values: 1 means base_a is home, 0 means base_b is home.
-    Uses .value directly to avoid Pyomo error messages on uninitialized vars
-    (h is unconstrained in the decision model, so the solver may leave it unset)."""
+    """Read h[w,k]: 1 = base_a home, 0 = base_b home."""
     h_vals = {}
     for w in range(n_weeks):
         for k in range(n_periods):
-            val = model.h[w, k].value  # None if uninitialized, no error printed
+            val = model.h[w, k].value
             h_vals[(w, k)] = 1 if (val is None or val > 0.5) else 0
     return h_vals
 
@@ -102,7 +99,7 @@ def solve_mip(
     solver_type: str = "highs",
     solver_verbose: bool = False,
 ) -> Tuple[bool, List[List[int]], dict, None]:
-    """Decision version of the MIP model (Pyomo)."""
+    """Decision MIP: find a valid period assignment."""
     if n_teams % 2 != 0:
         raise ValueError("Number of teams must be even.")
     if base_a is None or base_b is None or team_match_idx is None:
@@ -116,17 +113,23 @@ def solve_mip(
     model.K = RangeSet(0, n_periods - 1)
     model.P = RangeSet(1, n_periods)
 
+    # --- variables ---
     model.x = Var(model.W, model.K, model.P, domain=Binary)
     model.h = Var(model.W, model.K, domain=Binary)
 
+    # --- constraints ---
+    # C1: each match assigned to exactly one period
     def one_period_rule(m, w, k):
         return sum(m.x[w, k, p] for p in m.P) == 1
     model.one_period = Constraint(model.W, model.K, rule=one_period_rule)
 
+    # C2: each period hosts exactly one match per week
     def one_match_per_period_rule(m, w, p):
         return sum(m.x[w, k, p] for k in m.K) == 1
     model.one_match_per_period = Constraint(model.W, model.P, rule=one_match_per_period_rule)
 
+    # C3: at most twice per period per team
+    # (>=1 is implied: n-1 games over n/2 periods with cap 2 leaves no room for a zero)
     model.max_twice = ConstraintList()
     for t in range(n_teams):
         for p in range(1, n_periods + 1):
@@ -134,6 +137,7 @@ def solve_mip(
                 sum(model.x[w, team_match_idx[t][w], p] for w in range(n_weeks)) <= 2
             )
 
+    # --- symmetry breaking ---
     if symm_break:
         model.sb = ConstraintList()
         for k in range(n_periods):
@@ -142,6 +146,7 @@ def solve_mip(
 
     model.obj = Objective(expr=0, sense=minimize)
 
+    # --- solve ---
     _, has_solution = _solve(model, solver_type, timeout_s, solver_verbose)
 
     if not has_solution:

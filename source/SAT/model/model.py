@@ -13,37 +13,23 @@ def solve_sat(
     base_b: List[List[int]] = None,
     team_match_idx: List[List[int]] = None,
 ) -> Tuple[bool, List[List[int]], None]:
-    """
-    Solve tournament scheduling (decision version) with PySAT.
-
-    Encoding: one-hot over periods.
-      x[w][k][p] = True  iff  match k in week w is assigned to period (p+1).
-    Variable index (1-based, DIMACS):
-      var(w, k, p) = w * n_periods^2  +  k * n_periods  +  p  +  1
-    """
+    """Decision SAT: one-hot encoding over periods."""
     n_weeks   = n_teams - 1
     n_periods = n_teams // 2
 
-    # ------------------------------------------------------------------ #
-    #  Variable mapping                                                    #
-    # ------------------------------------------------------------------ #
-    def var(w: int, k: int, p: int) -> int:
+    def var(w: int, k: int, p: int) -> int:  # (w, k, p) -> DIMACS var index
         return w * n_periods * n_periods + k * n_periods + p + 1
 
     top_var = n_weeks * n_periods * n_periods
 
     cnf = CNF()
 
-    # ------------------------------------------------------------------ #
-    #  C1 – At-least-one: every match gets some period                    #
-    # ------------------------------------------------------------------ #
+    # --- C1: each match gets exactly one period (ALO) ---
     for w in range(n_weeks):
         for k in range(n_periods):
             cnf.append([var(w, k, p) for p in range(n_periods)])
 
-    # ------------------------------------------------------------------ #
-    #  C2 – At-most-one: every match gets at most one period (pairwise)   #
-    # ------------------------------------------------------------------ #
+    # --- C2: at most one period per match (AMO pairwise) ---
     for w in range(n_weeks):
         for k in range(n_periods):
             lits = [var(w, k, p) for p in range(n_periods)]
@@ -51,9 +37,7 @@ def solve_sat(
                 for j in range(i + 1, len(lits)):
                     cnf.append([-lits[i], -lits[j]])
 
-    # ------------------------------------------------------------------ #
-    #  C3 – AllDifferent per week: each period used by exactly one match  #
-    # ------------------------------------------------------------------ #
+    # --- C3: each period used exactly once per week ---
     for w in range(n_weeks):
         for p in range(n_periods):
             cnf.append([var(w, k, p) for k in range(n_periods)])   # ALO
@@ -62,9 +46,7 @@ def solve_sat(
                 for j in range(i + 1, len(lits)):
                     cnf.append([-lits[i], -lits[j]])               # AMO
 
-    # ------------------------------------------------------------------ #
-    #  C4 – At-most-twice + at-least-once per team per period             #
-    # ------------------------------------------------------------------ #
+    # --- C4: each team plays each period at least once and at most twice ---
     vpool_offset = top_var + 1
 
     for t in range(n_teams):
@@ -81,16 +63,12 @@ def solve_sat(
 
             cnf.append(lits)   # at-least-one
 
-    # ------------------------------------------------------------------ #
-    #  Symmetry breaking: fix week 0 → match k goes to period k          #
-    # ------------------------------------------------------------------ #
+    # --- symmetry breaking: fix week 0 periods ---
     if symm_break:
         for k in range(n_periods):
             cnf.append([var(0, k, k)])
 
-    # ------------------------------------------------------------------ #
-    #  Solve                                                               #
-    # ------------------------------------------------------------------ #
+    # --- solve ---
     with Solver(name=solver_name, bootstrap_with=cnf) as solver:
         satisfiable = solver.solve()
 
