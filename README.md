@@ -97,7 +97,7 @@ Results are written to `res/<PARADIGM>/<n_teams>.json` on your local machine.
   ```
 
 ### 4. Run a Single Paradigm
-Each paradigm can also be run individually:
+Each paradigm can also be run individually. Enter the container first and then run:
 ```bash
 python source/CP/run.py -n 6 8 -t 120
 ```
@@ -105,7 +105,7 @@ python source/CP/run.py -n 6 8 -t 120
 ## Check results
 To verify that the generated results are valid, run the provided
 `solution_checker.py` script by passing the folder containing the JSON
-result files to be checked.
+result files to be checked. Enter the container first and then run:
 
 ```bash
 python solution_checker.py <results_folder>
